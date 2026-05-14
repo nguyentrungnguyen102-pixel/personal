@@ -1361,7 +1361,11 @@ function renderBook(c){
   `;
 
   // Initialize wizard after rendering HTML
-  setTimeout(() => BookingWizard.init(), 0);
+  // Use requestAnimationFrame to ensure DOM is painted before init
+  requestAnimationFrame(() => {
+    console.log('[renderBook] Initializing BookingWizard...');
+    BookingWizard.init();
+  });
 }
 
 // ══════════════════════════════════════
