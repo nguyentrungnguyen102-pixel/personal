@@ -615,8 +615,7 @@ function loginSSO(){ loginAs('employee'); }
 function loginAs(role){
   currentRole = role;
   document.getElementById('page-login').style.display = 'none';
-  document.getElementById('app-shell').style.display = 'flex';
-  document.getElementById('app-shell').style.flexDirection = 'row';
+  document.getElementById('app-shell').style.display = 'block';
 
   const u = ROLES[role];
   document.getElementById('sb-avatar').textContent = u.initials;
@@ -1292,7 +1291,6 @@ document.addEventListener('click',e=>{
 function showModal(id){ document.getElementById(id).classList.add('open'); tripStep=1; updateTripStep(); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 
-let tripStep = 1;
 function tripNext(){
   if(tripStep===1){
     tripStep=2;
