@@ -1,4 +1,15 @@
 <!DOCTYPE html>
+<!--
+  VNPAY Travel Demo v2.1 - Bug Fixes
+
+  Version History:
+  - v2.1 (Current): Critical bug fixes for booking wizard
+    * Fixed renderSteps to show only current step
+    * Fixed step 5 visibility (only show after service type selected)
+    * Improved booking flow - no auto-select of combos
+  - v2.0: Booking wizard refactor to step-based UI
+  - v1.0: Initial VNPAY Travel demo
+-->
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
@@ -32,7 +43,7 @@
       z-index:100;transition:.3s
     }
     .sb-logo{padding:20px 20px 12px;border-bottom:1px solid rgba(255,255,255,.15);display:flex;align-items:center;gap:10px}
-    .sb-logo img{height:36px;filter:brightness(0) invert(1)}
+    .sb-logo img{height:36px;filter:brightness(1.8) contrast(0.9);opacity:1}
     .sb-logo span{font-size:11px;color:rgba(255,255,255,.6);line-height:1.3}
     .sb-user{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px}
     .sb-avatar{width:36px;height:36px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
@@ -229,12 +240,133 @@
     .step-line{flex:1;height:2px;background:var(--gray2);margin:0 4px}
     .step.done .step-line{background:var(--green)}
 
+    /* ── WIZARD STYLES ── */
+    .booking-wizard { position: relative; }
+    .wizard-header { margin-bottom: 20px; }
+    .wizard-progress { margin-top: 12px; }
+    .progress-bar-container {
+      width: 100%;
+      height: 6px;
+      background: var(--gray2);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--blue), var(--lblue));
+      border-radius: 20px;
+      transition: width 0.4s ease;
+    }
+    .step-counter {
+      font-weight: 700;
+      color: var(--blue);
+    }
+
+    .wizard-content { min-height: 400px; margin-bottom: 20px; }
+    .wizard-step {
+      animation: fadeIn 0.3s ease;
+      display: none;
+    }
+    .wizard-step.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .service-type-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin: 0;
+    }
+    .service-card {
+      display: block;
+      cursor: pointer;
+      border: 1.5px solid var(--gray2);
+      border-radius: 10px;
+      padding: 16px;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+    .service-card:hover {
+      border-color: var(--blue);
+      background: var(--gray1);
+    }
+    .service-card input:checked + .service-card-content {
+      color: var(--blue);
+    }
+    .service-card.active,
+    .service-card input:checked ~ .service-card-content {
+      border-color: var(--blue);
+      background: var(--gray1);
+    }
+    .service-card-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .service-icon {
+      font-size: 24px;
+      display: block;
+    }
+    .service-title {
+      font-weight: 700;
+      color: var(--blue);
+      font-size: 13px;
+    }
+    .service-desc {
+      font-size: 11px;
+      color: var(--gray3);
+    }
+
+    .hotel-card,
+    .transport-card {
+      border: 1.5px solid var(--gray2);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .hotel-card:hover,
+    .transport-card:hover {
+      border-color: var(--blue);
+      background: var(--gray1);
+    }
+    .hotel-card.selected,
+    .transport-card.selected {
+      border-color: var(--blue);
+      background: var(--gray1);
+    }
+
+    .wizard-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      padding-top: 16px;
+      border-top: 1px solid var(--gray2);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
     /* Responsive */
     @media(max-width:900px){
       #sidebar{width:60px}
       .sb-logo span,.sb-uname,.sb-urole,.sb-section,.sb-item span:not(.ic),.sb-badge,.sb-roles{display:none}
       #main{margin-left:60px}
       .grid-4{grid-template-columns:1fr 1fr}
+      .service-type-grid { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -312,10 +444,11 @@
 <div id="main">
   <div class="topbar">
     <div class="topbar-title" id="topbar-title">Tổng quan</div>
+    <div style="font-size:10px;color:var(--gray3);margin-left:auto;margin-right:16px">v2.1 (Bug Fixes)</div>
     <div class="topbar-actions">
       <span style="font-size:12px;color:var(--gray3)" id="topbar-date"></span>
       <div class="notif-btn" onclick="toggleNotif()">🔔<div class="notif-dot" id="notif-dot"></div></div>
-      <button class="btn btn-primary btn-sm" onclick="showModal('modal-trip')">+ Tạo Trip Request</button>
+      <button class="btn btn-primary btn-sm" onclick="navigate('book')">+ Tạo Trip Request</button>
     </div>
   </div>
 
@@ -554,6 +687,77 @@
       <button class="btn btn-ghost" onclick="closeModal('modal-approve')">Đóng</button>
       <button class="btn btn-red btn-sm" onclick="doReject()">✗ Từ chối</button>
       <button class="btn btn-green" onclick="doApprove()">✓ Phê duyệt</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INVOICE DETAIL -->
+<div class="modal-overlay" id="modal-invoice">
+  <div class="modal" style="width:600px">
+    <div class="modal-title">🧾 Chi tiết Hóa đơn</div>
+    <div style="background:var(--gray1);border-radius:10px;padding:20px;margin-bottom:16px;border-left:4px solid var(--blue)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:16px;font-weight:800;color:var(--blue)" id="invoice-number">#VAT-0158</div>
+        <span class="badge badge-green" id="invoice-status">✓ Đã khớp</span>
+      </div>
+      <div style="font-size:12px;color:var(--gray3);line-height:1.6">
+        Nhân viên: <b id="invoice-employee">Nguyễn Minh Tuấn</b><br/>
+        Ngày tạo: <b id="invoice-date">15/05/2026 09:15</b><br/>
+        Dịch vụ: <b id="invoice-service">✈️ VietJet VJ134</b>
+      </div>
+    </div>
+
+    <div class="card" style="padding:16px;margin-bottom:16px;border:1px solid var(--gray2);background:#fff">
+      <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--gray2)">
+        <div style="font-size:12px;color:var(--gray3);margin-bottom:8px">Thông tin hóa đơn VAT</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>Mã số thuế công ty (VNPAY):</span><span style="font-weight:700">0103952347</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>Tên công ty:</span><span style="font-weight:700">VNPAY JSC</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>Địa chỉ:</span><span style="font-weight:700">Hà Nội, Việt Nam</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--gray2)">
+        <div style="font-size:12px;color:var(--gray3);margin-bottom:8px">Chi tiết dịch vụ</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span id="invoice-item-desc">Vé máy bay VietJet VJ134</span>
+          <span id="invoice-item-qty">1 chiều</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>Đơn giá:</span><span id="invoice-unit-price">1.850.000đ</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>Số lượng:</span><span>1</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700">
+          <span>Thành tiền:</span><span id="invoice-subtotal">1.850.000đ</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--gray2)">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>Tiền hàng:</span><span id="invoice-amount">1.850.000đ</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>VAT 10% (nội):</span><span id="invoice-vat">185.000đ</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;color:var(--blue)">
+          <span>Tổng cộng:</span><span id="invoice-total">2.035.000đ</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;padding:10px 12px;background:#EBF0FA;border-radius:6px;font-size:12px">
+        Cost Center: <b id="invoice-cost-center">BD-HCM-001</b>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-invoice')">Đóng</button>
+      <button class="btn btn-outline btn-sm" onclick="downloadInvoicePDF()">📥 Tải PDF</button>
     </div>
   </div>
 </div>
@@ -880,103 +1084,300 @@ function renderTrips(c){
 }
 
 // ══════════════════════════════════════
-//  BOOK (Đặt dịch vụ)
+//  BOOK (Đặt dịch vụ) - WIZARD PATTERN
 // ══════════════════════════════════════
 function renderBook(c){
   c.innerHTML = `
-  <div style="background:linear-gradient(135deg,var(--blue),#0052CC);border-radius:var(--radius);padding:24px;color:#fff;margin-bottom:20px">
-    <div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:4px">Trip đã phê duyệt: <b>#TRV-0028</b></div>
-    <div style="font-size:20px;font-weight:800;margin-bottom:4px">✈️ Hà Nội → Đà Nẵng</div>
-    <div style="font-size:13px;color:rgba(255,255,255,.8)">08/05 → 09/05/2026 • Gặp đối tác FPT Đà Nẵng</div>
-    <div style="margin-top:14px;background:rgba(255,255,255,.15);border-radius:8px;padding:10px 14px;display:inline-block">
-      💰 Hạn mức còn lại: <b>4.200.000đ</b> / 8.000.000đ
-    </div>
-  </div>
-
-  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-    <button class="btn btn-primary btn-sm">✈️ Vé máy bay</button>
-    <button class="btn btn-ghost btn-sm">🏨 Khách sạn</button>
-    <button class="btn btn-ghost btn-sm">🚖 Taxi</button>
-    <button class="btn btn-ghost btn-sm">🚌 Xe khách</button>
-    <button class="btn btn-ghost btn-sm">🚆 Tàu hỏa</button>
-  </div>
-
-  <div class="grid-2">
-    <div class="card">
-      <div class="card-title">✈️ Chọn chuyến bay HAN → DAD</div>
-      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-        <select class="form-control" style="width:auto"><option>Economy</option><option>Business</option></select>
-        <select class="form-control" style="width:auto"><option>Sắp xếp: Giá thấp nhất</option><option>Giờ khởi hành sớm nhất</option></select>
+  <section id="booking-wizard" class="booking-wizard">
+    <!-- Header with progress -->
+    <header class="wizard-header">
+      <h1 style="font-size:18px;font-weight:800;color:var(--blue);margin-bottom:16px">✈️ Đặt dịch vụ du lịch</h1>
+      <div class="wizard-progress">
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progress-fill" style="width:20%"></div>
+        </div>
+        <div style="text-align:right;font-size:12px;color:var(--gray3)">
+          <span id="step-counter" class="step-counter">Bước 1</span> / <span id="step-total">5</span>
+        </div>
       </div>
+    </header>
 
-      <div class="flight-card selected" onclick="selectFlight(this)">
-        <div><div class="flight-airline">VietJet Air VJ532</div><div class="flight-time">06:10 → 08:00</div></div>
-        <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h50</div></div>
-        <div class="flight-price"><div class="price">1.250.000đ</div><span class="badge badge-green">✓ Policy</span></div>
-      </div>
-
-      <div class="flight-card" onclick="selectFlight(this)">
-        <div><div class="flight-airline">Vietnam Airlines VN1540</div><div class="flight-time">08:30 → 10:25</div></div>
-        <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h55</div></div>
-        <div class="flight-price"><div class="price">1.890.000đ</div><span class="badge badge-yellow">⚠ Gần hạn mức</span></div>
-      </div>
-
-      <div class="flight-card" onclick="selectFlight(this)">
-        <div><div class="flight-airline">Bamboo Airways QH102</div><div class="flight-time">10:00 → 11:50</div></div>
-        <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h50</div></div>
-        <div class="flight-price"><div class="price">1.680.000đ</div><span class="badge badge-green">✓ Policy</span></div>
-      </div>
-
-      <div class="flight-card" onclick="selectFlight(this)" style="opacity:.7">
-        <div><div class="flight-airline">Vietnam Airlines VN1540 — Business</div><div class="flight-time">08:30 → 10:25</div></div>
-        <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h55</div></div>
-        <div class="flight-price"><div class="price">4.500.000đ</div><span class="badge badge-red">✗ Vượt policy</span></div>
+    <!-- Trip Info Banner -->
+    <div style="background:linear-gradient(135deg,var(--blue),#0052CC);border-radius:var(--radius);padding:16px;color:#fff;margin-bottom:20px">
+      <div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:4px">Trip: <b>#TRV-0028</b></div>
+      <div style="font-size:16px;font-weight:800;margin-bottom:2px">HAN → DAD • 08/05 → 09/05</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:12px">Gặp FPT Đà Nẵng</div>
+      <div style="background:rgba(255,255,255,.15);border-radius:6px;padding:8px 12px;display:inline-block;font-size:11px">
+        💰 Hạn mức: <b>4.200.000đ</b> / 8M
       </div>
     </div>
 
-    <div>
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-title">🛒 Giỏ dịch vụ đã chọn</div>
-        <div style="border-bottom:1px solid var(--gray2);padding-bottom:10px;margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-            <span style="font-size:13px">✈️ VietJet VJ532 (06:10)</span><span style="font-weight:700">1.250.000đ</span>
+    <!-- Steps Container -->
+    <div class="wizard-content">
+      <!-- STEP 1: Service Type Selection -->
+      <section class="wizard-step active" id="step-1" data-step="1">
+        <div class="card">
+          <h2 class="card-title">Chọn loại chuyến đi</h2>
+          <fieldset style="border:none;padding:0;margin:0">
+            <legend class="sr-only">Service Type Options</legend>
+            <div class="service-type-grid">
+              <label class="service-card">
+                <input type="radio" name="serviceType" value="flight-only" class="sr-only" />
+                <span class="service-card-content">
+                  <span class="service-icon">✈️</span>
+                  <span class="service-title">Chỉ vé máy bay</span>
+                  <span class="service-desc">Một chiều hoặc khứ hồi</span>
+                </span>
+              </label>
+              <label class="service-card">
+                <input type="radio" name="serviceType" value="flight-hotel" class="sr-only" />
+                <span class="service-card-content">
+                  <span class="service-icon">✈️ 🏨</span>
+                  <span class="service-title">Vé máy bay + Khách sạn</span>
+                  <span class="service-desc" style="color:var(--green);font-weight:600">COMBO - Tiết kiệm tới 20%</span>
+                </span>
+              </label>
+              <label class="service-card">
+                <input type="radio" name="serviceType" value="flight-hotel-taxi" class="sr-only" />
+                <span class="service-card-content">
+                  <span class="service-icon">✈️ 🏨 🚖</span>
+                  <span class="service-title">Combo đầy đủ</span>
+                  <span class="service-desc">Máy bay + KS + Giao thông</span>
+                </span>
+              </label>
+              <label class="service-card">
+                <input type="radio" name="serviceType" value="hotel-only" class="sr-only" />
+                <span class="service-card-content">
+                  <span class="service-icon">🏨</span>
+                  <span class="service-title">Riêng khách sạn</span>
+                  <span class="service-desc">Không bay, chỉ KS</span>
+                </span>
+              </label>
+              <label class="service-card">
+                <input type="radio" name="serviceType" value="transport-only" class="sr-only" />
+                <span class="service-card-content">
+                  <span class="service-icon">🚖 🚌</span>
+                  <span class="service-title">Riêng giao thông</span>
+                  <span class="service-desc">Taxi, xe khách, tàu hỏa</span>
+                </span>
+              </label>
+            </div>
+          </fieldset>
+        </div>
+      </section>
+
+      <!-- STEP 2: Flight Selection (if flight selected) -->
+      <section class="wizard-step" id="step-2" data-step="2" style="display:none">
+        <div class="card">
+          <div class="card-title">✈️ Chọn chuyến bay HAN → DAD</div>
+          <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+            <select class="form-control" style="width:auto"><option>Economy</option><option>Business</option></select>
+            <select class="form-control" style="width:auto"><option>Giá thấp nhất</option><option>Khởi hành sớm</option></select>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-left:auto">
+              <input type="checkbox" id="roundtrip-check" onchange="toggleRoundTrip()" />
+              <span style="font-size:12px;font-weight:600">Khứ hồi</span>
+            </label>
           </div>
-          <div style="font-size:11px;color:var(--gray3)">HAN → DAD • Economy • 08/05/2026</div>
-        </div>
-        <div style="border-bottom:1px solid var(--gray2);padding-bottom:10px;margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-            <span style="font-size:13px">🏨 Mường Thanh Da Nang (1 đêm)</span><span style="font-weight:700">850.000đ</span>
+          <div id="flight-cards-container">
+            <div class="flight-card selected" data-flight-id="vj532">
+              <div><div class="flight-airline">VietJet Air VJ532</div><div class="flight-time">06:10 → 08:00</div></div>
+              <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h50</div></div>
+              <div class="flight-price"><div class="price">1.250.000đ</div><span class="badge badge-green">✓ Policy</span></div>
+            </div>
+            <div class="flight-card" data-flight-id="vn1540">
+              <div><div class="flight-airline">Vietnam Airlines VN1540</div><div class="flight-time">08:30 → 10:25</div></div>
+              <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h55</div></div>
+              <div class="flight-price"><div class="price">1.890.000đ</div><span class="badge badge-yellow">⚠ Gần hạn</span></div>
+            </div>
+            <div class="flight-card" data-flight-id="ba102">
+              <div><div class="flight-airline">Bamboo Airways QH102</div><div class="flight-time">10:00 → 11:50</div></div>
+              <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h50</div></div>
+              <div class="flight-price"><div class="price">1.680.000đ</div><span class="badge badge-green">✓ Policy</span></div>
+            </div>
           </div>
-          <div style="font-size:11px;color:var(--gray3)">08/05 → 09/05 • Standard Room</div>
-        </div>
-        <div style="border-bottom:1px solid var(--gray2);padding-bottom:10px;margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-            <span style="font-size:13px">🚖 XanhSM (Sân bay → KS)</span><span style="font-weight:700">150.000đ</span>
+          <div id="return-flight-section" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--gray2)">
+            <h3 style="font-size:13px;font-weight:700;color:var(--blue);margin-bottom:12px">✈️ Chuyến về DAD → HAN</h3>
+            <div id="return-flight-cards-container">
+              <div class="flight-card selected" data-flight-id="vj531-ret">
+                <div><div class="flight-airline">VietJet Air VJ531</div><div class="flight-time">10:20 → 12:15</div></div>
+                <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">DAD ─── HAN</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h55</div></div>
+                <div class="flight-price"><div class="price">1.250.000đ</div><span class="badge badge-green">✓ Policy</span></div>
+              </div>
+              <div class="flight-card" data-flight-id="vn1541-ret">
+                <div><div class="flight-airline">Vietnam Airlines VN1541</div><div class="flight-time">14:40 → 16:45</div></div>
+                <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">DAD ─── HAN</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">2h05</div></div>
+                <div class="flight-price"><div class="price">1.890.000đ</div><span class="badge badge-green">✓ Policy</span></div>
+              </div>
+            </div>
           </div>
-          <div style="font-size:11px;color:var(--gray3)">Đón tại T2 Đà Nẵng</div>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;margin-bottom:14px">
-          <span>Tổng cộng</span><span style="color:var(--blue)">2.250.000đ</span>
+      </section>
+
+      <!-- STEP 3: Hotel Selection (if hotel selected) -->
+      <section class="wizard-step" id="step-3" data-step="3" style="display:none">
+        <div class="card">
+          <div class="card-title">🏨 Chọn khách sạn ở Đà Nẵng</div>
+          <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+            <input type="date" class="form-control" style="width:auto" value="2026-05-08" />
+            <input type="date" class="form-control" style="width:auto" value="2026-05-09" />
+            <select class="form-control" style="width:auto"><option>Tất cả sao</option><option>5 sao</option><option>4 sao</option></select>
+          </div>
+          <div id="hotel-cards-container">
+            <div class="hotel-card" data-hotel-id="pullman">
+              <div style="display:flex;gap:10px">
+                <div style="font-size:28px">🏢</div>
+                <div style="flex:1">
+                  <div style="font-weight:700;color:var(--blue)">Pullman Saigon Danang Beach</div>
+                  <div style="font-size:11px;color:var(--gray3);margin-bottom:6px">⭐⭐⭐⭐⭐ • 5 sao</div>
+                  <div style="display:flex;justify-content:space-between">
+                    <span>1.500.000đ/đêm</span>
+                    <span class="badge badge-red">✗ Vượt policy</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="hotel-card active selected" data-hotel-id="muong-thanh">
+              <div style="display:flex;gap:10px">
+                <div style="font-size:28px">🏨</div>
+                <div style="flex:1">
+                  <div style="font-weight:700;color:var(--blue)">Mường Thanh Danang Beach</div>
+                  <div style="font-size:11px;color:var(--gray3);margin-bottom:6px">⭐⭐⭐ • 3 sao</div>
+                  <div style="display:flex;justify-content:space-between">
+                    <span>850.000đ/đêm</span>
+                    <span class="badge badge-green">✓ Trong policy</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="hotel-card" data-hotel-id="novotel">
+              <div style="display:flex;gap:10px">
+                <div style="font-size:28px">🏩</div>
+                <div style="flex:1">
+                  <div style="font-weight:700;color:var(--blue)">Novotel Danang Premier</div>
+                  <div style="font-size:11px;color:var(--gray3);margin-bottom:6px">⭐⭐⭐⭐ • 4 sao</div>
+                  <div style="display:flex;justify-content:space-between">
+                    <span>1.200.000đ/đêm</span>
+                    <span class="badge badge-yellow">⚠ Gần hạn</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div style="background:#EAFAF1;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--green);margin-bottom:14px">
-          ✓ Tất cả trong hạn mức • Thanh toán bằng Virtual Credit công ty
+      </section>
+
+      <!-- STEP 4: Transport Selection (if available) -->
+      <section class="wizard-step" id="step-4" data-step="4" style="display:none">
+        <div class="card">
+          <h2 class="card-title">🚖 Thêm giao thông (tùy chọn)</h2>
+          <div id="transport-cards-container">
+            <div class="transport-card" data-transport-id="xanhsm">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="flex:1">
+                  <div style="font-weight:700;color:var(--blue)">🚗 XanhSM (Xe công nghệ)</div>
+                  <div style="font-size:12px;color:var(--gray3)">Sân bay → Khách sạn • 15-20p</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-weight:700;font-size:16px">280.000đ</div>
+                  <span class="badge badge-green" style="margin-top:4px">✓ Policy</span>
+                </div>
+              </div>
+            </div>
+            <div class="transport-card selected active" data-transport-id="grab">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="flex:1">
+                  <div style="font-weight:700;color:var(--blue)">🚕 Grab (Xe công nghệ)</div>
+                  <div style="font-size:12px;color:var(--gray3)">Sân bay → Khách sạn • 12-18p</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-weight:700;font-size:16px">300.000đ</div>
+                  <span class="badge badge-green" style="margin-top:4px">✓ Policy</span>
+                </div>
+              </div>
+            </div>
+            <div class="transport-card" data-transport-id="taxi">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="flex:1">
+                  <div style="font-weight:700;color:var(--blue)">🚙 Taxi truyền thống</div>
+                  <div style="font-size:12px;color:var(--gray3)">Sân bay → Khách sạn</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-weight:700;font-size:16px">250.000đ</div>
+                  <span class="badge badge-green" style="margin-top:4px">✓ Policy</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:12px;padding:12px;background:var(--gray1);border-radius:8px;font-size:12px;color:var(--gray3)">
+            <span style="color:var(--blue)">ℹ️</span> Bạn cũng có thể bỏ qua và thêm giao thông sau
+          </div>
         </div>
-        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doBook()">
-          🔐 Xác nhận đặt & Thanh toán
-        </button>
-      </div>
-      <div class="card">
-        <div class="card-title">📍 Lịch trình chuyến đi</div>
-        <div class="timeline">
-          <div class="tl-item"><div class="tl-dot done"></div><div class="tl-title">06:10 — Bay HAN → DAD</div><div class="tl-sub">VietJet VJ532 • T1 Nội Bài</div></div>
-          <div class="tl-item"><div class="tl-dot done"></div><div class="tl-title">08:00 — Đến Đà Nẵng</div><div class="tl-sub">T2 Đà Nẵng</div></div>
-          <div class="tl-item"><div class="tl-dot pending"></div><div class="tl-title">08:30 — Taxi đến khách sạn</div><div class="tl-sub">XanhSM • Mường Thanh (~20p)</div></div>
-          <div class="tl-item"><div class="tl-dot"></div><div class="tl-title">09:30 → 17:00 — Họp FPT</div><div class="tl-sub">FPT Tower Da Nang, P.Hai Chau</div></div>
-          <div class="tl-item"><div class="tl-dot"></div><div class="tl-title">09/05 — Bay về HAN</div><div class="tl-sub">VietJet VJ531 • 10:20</div></div>
+      </section>
+
+      <!-- STEP 5: Review & Checkout -->
+      <section class="wizard-step" id="step-5" data-step="5" style="display:none">
+        <div class="grid-2">
+          <div class="card">
+            <h2 class="card-title">📋 Xác nhận đơn hàng</h2>
+            <div id="summary-content">
+              <div style="border-bottom:1px solid var(--gray2);padding-bottom:12px;margin-bottom:12px">
+                <div style="font-size:12px;color:var(--gray3);margin-bottom:4px">✈️ Máy bay</div>
+                <div style="font-weight:700;color:var(--blue);margin-bottom:2px">VietJet VJ532 (06:10)</div>
+                <div style="font-size:11px;color:var(--gray3);margin-bottom:6px">HAN → DAD</div>
+                <div style="text-align:right;font-weight:700">1.250.000đ</div>
+              </div>
+              <div style="border-bottom:1px solid var(--gray2);padding-bottom:12px;margin-bottom:12px">
+                <div style="font-size:12px;color:var(--gray3);margin-bottom:4px">🏨 Khách sạn</div>
+                <div style="font-weight:700;color:var(--blue);margin-bottom:2px">Mường Thanh (1 đêm)</div>
+                <div style="font-size:11px;color:var(--gray3);margin-bottom:6px">08/05 - 09/05</div>
+                <div style="text-align:right;font-weight:700">850.000đ</div>
+              </div>
+              <div style="border-bottom:1px solid var(--gray2);padding-bottom:12px;margin-bottom:12px">
+                <div style="font-size:12px;color:var(--gray3);margin-bottom:4px">🚖 Giao thông</div>
+                <div style="font-weight:700;color:var(--blue);margin-bottom:2px">Grab</div>
+                <div style="font-size:11px;color:var(--gray3);margin-bottom:6px">Sân bay → KS</div>
+                <div style="text-align:right;font-weight:700">300.000đ</div>
+              </div>
+              <div style="background:#EAFAF1;border-radius:8px;padding:12px;margin-bottom:14px">
+                <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;color:var(--green)">
+                  <span>Tổng cộng</span>
+                  <span>2.400.000đ</span>
+                </div>
+                <div style="font-size:11px;color:var(--green);margin-top:4px">✓ Tất cả trong hạn mức</div>
+              </div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="completeBooking()">
+              🔐 Xác nhận đặt & Thanh toán
+            </button>
+          </div>
+          <div class="card">
+            <h2 class="card-title">📍 Lịch trình chuyến đi</h2>
+            <div class="timeline">
+              <div class="tl-item"><div class="tl-dot done"></div><div class="tl-title">06:10 — Bay HAN → DAD</div><div class="tl-sub">VietJet VJ532</div></div>
+              <div class="tl-item"><div class="tl-dot done"></div><div class="tl-title">08:00 — Đến Đà Nẵng</div><div class="tl-sub">Tại sân bay T2</div></div>
+              <div class="tl-item"><div class="tl-dot pending"></div><div class="tl-title">08:30 — Taxi đến KS</div><div class="tl-sub">Grab • ~20 phút</div></div>
+              <div class="tl-item"><div class="tl-dot"></div><div class="tl-title">09:30-17:00 — Họp FPT</div><div class="tl-sub">FPT Tower Da Nang</div></div>
+              <div class="tl-item"><div class="tl-dot"></div><div class="tl-title">09/05 10:20 — Bay về HAN</div><div class="tl-sub">VietJet VJ531</div></div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
-  </div>`;
+
+    <!-- Navigation Buttons -->
+    <div class="wizard-actions">
+      <button id="btn-back" class="btn btn-ghost" style="display:none">← Quay lại</button>
+      <button id="btn-next" class="btn btn-primary">Tiếp theo →</button>
+    </div>
+  </section>
+  `;
+
+  // Initialize wizard after rendering HTML
+  // Use requestAnimationFrame to ensure DOM is painted before init
+  requestAnimationFrame(() => {
+    console.log('[renderBook] Initializing BookingWizard...');
+    BookingWizard.init();
+  });
 }
 
 // ══════════════════════════════════════
@@ -1162,16 +1563,26 @@ function renderInvoice(c){
 }
 
 function invoiceTableHTML(){
-  return `<table class="tbl">
+  const invoices = [
+    {number:'#VAT-0158', employee:'Nguyễn M. Tuấn', service:'✈️ VietJet VJ134', amount:1850000, vat:10, costCenter:'BD-HCM-001', status:'Khớp', statusBadge:'badge-green'},
+    {number:'#VAT-0157', employee:'Nguyễn M. Tuấn', service:'🏨 Pullman SGN', amount:1800000, vat:10, costCenter:'BD-HCM-001', status:'Khớp', statusBadge:'badge-green'},
+    {number:'#VAT-0156', employee:'Phạm K. Linh', service:'✈️ VN1540', amount:1890000, vat:8, costCenter:'BD-HCM-001', status:'Xem xét', statusBadge:'badge-yellow'},
+    {number:'#VAT-0155', employee:'Lê M. Khoa', service:'🚖 XanhSM', amount:180000, vat:10, costCenter:'TECH-001', status:'Khớp', statusBadge:'badge-green'},
+    {number:'#VAT-0154', employee:'Hoàng T. Mai', service:'🏨 Mường Thanh', amount:750000, vat:8, costCenter:'SALES-HN-002', status:'Khớp', statusBadge:'badge-green'}
+  ];
+
+  let html = `<table class="tbl">
     <thead><tr><th>Số HĐ</th><th>Nhân viên</th><th>Dịch vụ</th><th>Giá trị</th><th>VAT</th><th>Cost Center</th><th>Đối soát</th><th>Action</th></tr></thead>
-    <tbody>
-      <tr><td><b>#VAT-0158</b></td><td>Nguyễn M. Tuấn</td><td>✈️ VietJet VJ134</td><td>1.850.000đ</td><td>10%</td><td>BD-HCM-001</td><td><span class="badge badge-green">✓ Khớp</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
-      <tr><td><b>#VAT-0157</b></td><td>Nguyễn M. Tuấn</td><td>🏨 Pullman SGN</td><td>1.800.000đ</td><td>10%</td><td>BD-HCM-001</td><td><span class="badge badge-green">✓ Khớp</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
-      <tr><td><b>#VAT-0156</b></td><td>Phạm K. Linh</td><td>✈️ VN1540</td><td>1.890.000đ</td><td>8%</td><td>BD-HCM-001</td><td><span class="badge badge-yellow">⚠ Xem xét</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
-      <tr><td><b>#VAT-0155</b></td><td>Lê M. Khoa</td><td>🚖 XanhSM</td><td>180.000đ</td><td>10%</td><td>TECH-001</td><td><span class="badge badge-green">✓ Khớp</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
-      <tr><td><b>#VAT-0154</b></td><td>Hoàng T. Mai</td><td>🏨 Mường Thanh</td><td>750.000đ</td><td>8%</td><td>SALES-HN-002</td><td><span class="badge badge-green">✓ Khớp</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
-    </tbody>
-  </table>`;
+    <tbody>`;
+
+  invoices.forEach(inv => {
+    html += `<tr style="cursor:pointer" onclick="showInvoice('${inv.number}','${inv.employee}','${inv.service}',${inv.amount},${inv.vat},'${inv.costCenter}')">
+      <td><b>${inv.number}</b></td><td>${inv.employee}</td><td>${inv.service}</td><td>${(inv.amount).toLocaleString('vi-VN')}đ</td><td>${inv.vat}%</td><td>${inv.costCenter}</td><td><span class="badge ${inv.statusBadge}">${inv.status === 'Khớp' ? '✓ Khớp' : '⚠ Xem xét'}</span></td><td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); downloadInvoicePDF('${inv.number}')">PDF</button></td>
+    </tr>`;
+  });
+
+  html += `</tbody></table>`;
+  return html;
 }
 
 // ══════════════════════════════════════
@@ -1278,6 +1689,264 @@ function serviceRow(name,val,pct,color){
 }
 
 // ══════════════════════════════════════
+//  BOOKING WIZARD MODULE
+// ══════════════════════════════════════
+const BookingWizard = (() => {
+  // Private state
+  const state = {
+    currentStep: 1,
+    totalSteps: 5,
+    serviceType: null,  // Will be set when user selects a service type
+    isRoundTrip: false,
+    selections: {
+      outboundFlight: 'vj532',
+      returnFlight: 'vj531-ret',
+      hotel: 'muong-thanh',
+      transport: 'grab'
+    }
+  };
+
+  // Step requirements based on service type
+  const stepConfig = {
+    1: { visible: true, title: 'Chọn loại chuyến đi' },
+    2: { visible: (st) => ['flight-only', 'flight-hotel', 'flight-hotel-taxi'].includes(st), title: 'Chọn chuyến bay' },
+    3: { visible: (st) => ['flight-hotel', 'flight-hotel-taxi', 'hotel-only'].includes(st), title: 'Chọn khách sạn' },
+    4: { visible: (st) => ['flight-hotel-taxi', 'transport-only'].includes(st), title: 'Thêm giao thông' },
+    5: { visible: (st) => st !== null, title: 'Xác nhận đơn hàng' }
+  };
+
+  function getVisibleSteps() {
+    return Object.keys(stepConfig)
+      .map(Number)
+      .filter(step => {
+        const config = stepConfig[step];
+        return typeof config.visible === 'function' ? config.visible(state.serviceType) : config.visible;
+      });
+  }
+
+  function getNextVisibleStep(current) {
+    const visible = getVisibleSteps();
+    const index = visible.indexOf(current);
+    return index < visible.length - 1 ? visible[index + 1] : current;
+  }
+
+  function getPrevVisibleStep(current) {
+    const visible = getVisibleSteps();
+    const index = visible.indexOf(current);
+    return index > 0 ? visible[index - 1] : current;
+  }
+
+  function renderSteps() {
+    const allSteps = document.querySelectorAll('.wizard-step');
+    const visible = getVisibleSteps();
+
+    allSteps.forEach(step => {
+      const stepNum = parseInt(step.getAttribute('data-step'));
+      // Only show current step if it's in visible steps
+      if (stepNum === state.currentStep && visible.includes(stepNum)) {
+        step.style.display = 'block';
+        step.classList.add('active');
+      } else {
+        step.style.display = 'none';
+        step.classList.remove('active');
+      }
+    });
+  }
+
+  function updateProgress() {
+    const visible = getVisibleSteps();
+    const currentIndex = visible.indexOf(state.currentStep);
+    const progress = ((currentIndex + 1) / visible.length) * 100;
+
+    document.getElementById('progress-fill').style.width = progress + '%';
+    document.getElementById('step-counter').textContent = `Bước ${currentIndex + 1}`;
+    document.getElementById('step-total').textContent = visible.length;
+
+    // Update buttons
+    const btnBack = document.getElementById('btn-back');
+    const btnNext = document.getElementById('btn-next');
+
+    if (currentIndex === 0) {
+      btnBack.style.display = 'none';
+    } else {
+      btnBack.style.display = 'block';
+    }
+
+    if (currentIndex === visible.length - 1) {
+      btnNext.textContent = 'Hoàn tất ✓';
+      btnNext.classList.add('btn-green');
+      btnNext.classList.remove('btn-primary');
+    } else {
+      btnNext.textContent = 'Tiếp theo →';
+      btnNext.classList.remove('btn-green');
+      btnNext.classList.add('btn-primary');
+    }
+  }
+
+  function selectServiceType(type) {
+    state.serviceType = type;
+    console.log('Service type selected:', type);
+    // Re-render to show/hide steps based on selected service
+    renderSteps();
+    updateProgress();
+    // Auto-jump to step 2 after selection
+    if (state.currentStep === 1) {
+      const nextStep = getNextVisibleStep(1);
+      if (nextStep !== 1) {
+        console.log('Auto-jumping from step 1 to step:', nextStep);
+        goToStep(nextStep);
+      }
+    }
+  }
+
+  function goToStep(step) {
+    const visible = getVisibleSteps();
+    console.log('goToStep called with step:', step, 'visible steps:', visible);
+    if (visible.includes(step)) {
+      state.currentStep = step;
+      console.log('Moving to step:', step);
+      renderSteps();
+      updateProgress();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      console.warn('Step', step, 'not in visible steps:', visible);
+    }
+  }
+
+  function handleServiceTypeChange(e) {
+    if (e.target.name === 'serviceType') {
+      selectServiceType(e.target.value);
+    }
+  }
+
+  function handleFlightCardClick(e) {
+    const card = e.target.closest('.flight-card');
+    if (!card) return;
+
+    console.log('Flight card clicked:', card.getAttribute('data-flight-id'));
+    const isReturn = !!card.closest('#return-flight-section');
+    const selector = (isReturn ? '#return-flight-cards-container' : '#flight-cards-container') + ' .flight-card';
+
+    document.querySelectorAll(selector).forEach(c => {
+      c.classList.remove('selected');
+    });
+    card.classList.add('selected');
+
+    const flightId = card.getAttribute('data-flight-id');
+    if (isReturn) {
+      state.selections.returnFlight = flightId;
+      console.log('Return flight selected:', flightId);
+    } else {
+      state.selections.outboundFlight = flightId;
+      console.log('Outbound flight selected:', flightId);
+    }
+  }
+
+  function handleHotelCardClick(e) {
+    const card = e.target.closest('.hotel-card');
+    if (!card) return;
+
+    console.log('Hotel card clicked:', card.getAttribute('data-hotel-id'));
+    document.querySelectorAll('.hotel-card').forEach(c => {
+      c.classList.remove('selected', 'active');
+    });
+    card.classList.add('selected', 'active');
+    const hotelId = card.getAttribute('data-hotel-id');
+    state.selections.hotel = hotelId;
+    console.log('Hotel selected:', hotelId);
+  }
+
+  function handleTransportCardClick(e) {
+    const card = e.target.closest('.transport-card');
+    if (!card) return;
+
+    console.log('Transport card clicked:', card.getAttribute('data-transport-id'));
+    document.querySelectorAll('.transport-card').forEach(c => {
+      c.classList.remove('selected', 'active');
+    });
+    card.classList.add('selected', 'active');
+    const transportId = card.getAttribute('data-transport-id');
+    state.selections.transport = transportId;
+    console.log('Transport selected:', transportId);
+  }
+
+  function init() {
+    // Event delegation - single listener for all interactions
+    document.addEventListener('change', (e) => {
+      if (e.target.name === 'serviceType') {
+        console.log('Service type changed:', e.target.value);
+        handleServiceTypeChange(e);
+      }
+    });
+
+    // Handle Next button
+    const btnNext = document.getElementById('btn-next');
+    if (btnNext) {
+      btnNext.addEventListener('click', (e) => {
+        console.log('Next button clicked, current step:', state.currentStep);
+        e.preventDefault();
+        e.stopPropagation();
+        const visible = getVisibleSteps();
+        const currentIndex = visible.indexOf(state.currentStep);
+        console.log('Visible steps:', visible, 'Current index:', currentIndex);
+        if (currentIndex === visible.length - 1) {
+          console.log('On last step, completing booking');
+          completeBooking();
+        } else {
+          const nextStep = getNextVisibleStep(state.currentStep);
+          console.log('Going to next step:', nextStep);
+          goToStep(nextStep);
+        }
+      });
+    }
+
+    // Handle Back button
+    const btnBack = document.getElementById('btn-back');
+    if (btnBack) {
+      btnBack.addEventListener('click', (e) => {
+        console.log('Back button clicked');
+        e.preventDefault();
+        e.stopPropagation();
+        goToStep(getPrevVisibleStep(state.currentStep));
+      });
+    }
+
+    // Handle card clicks with delegation
+    document.addEventListener('click', (e) => {
+      handleFlightCardClick(e);
+      handleHotelCardClick(e);
+      handleTransportCardClick(e);
+    });
+
+    // Initial render
+    console.log('BookingWizard initializing...');
+    // Render Step 1 with service type selection (no auto-select)
+    // User must click a service type to proceed
+    renderSteps();
+    updateProgress();
+  }
+
+  // Public API
+  return {
+    init,
+    goToStep,
+    selectServiceType,
+    getState: () => ({ ...state })
+  };
+})();
+
+function completeBooking() {
+  showToast('🎉 Đặt dịch vụ thành công! E-invoice sẽ được gửi trong 5 phút.', 'green');
+}
+
+function toggleRoundTrip() {
+  const isChecked = document.getElementById('roundtrip-check').checked;
+  const returnSection = document.getElementById('return-flight-section');
+  BookingWizard.getState().isRoundTrip = isChecked;
+  returnSection.style.display = isChecked ? 'block' : 'none';
+}
+
+// ══════════════════════════════════════
 //  ACTIONS
 // ══════════════════════════════════════
 function toggleNotif(){
@@ -1323,11 +1992,6 @@ function updateTripStep(){
   document.getElementById('btn-modal-cancel').textContent='Hủy';
 }
 
-function selectFlight(el){
-  document.querySelectorAll('.flight-card').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected');
-}
-
 function quickApprove(id){
   const card = document.getElementById('card-'+id);
   if(card){
@@ -1349,6 +2013,30 @@ function quickReject(id){
 function doApprove(){ closeModal('modal-approve'); showToast('✓ Đã phê duyệt thành công!','green'); }
 function doReject(){ closeModal('modal-approve'); showToast('✗ Đã từ chối yêu cầu','red'); }
 function doBook(){ showToast('🎉 Đặt vé thành công! E-invoice sẽ được gửi trong 5 phút.','green'); }
+
+function showInvoice(number, employee, service, amount, vat, costCenter){
+  document.getElementById('invoice-number').textContent = number;
+  document.getElementById('invoice-employee').textContent = employee;
+  document.getElementById('invoice-date').textContent = new Date().toLocaleDateString('vi-VN') + ' 09:15';
+  document.getElementById('invoice-service').textContent = service;
+  document.getElementById('invoice-item-desc').textContent = service.substring(2);
+  document.getElementById('invoice-unit-price').textContent = amount.toLocaleString('vi-VN') + 'đ';
+  document.getElementById('invoice-subtotal').textContent = amount.toLocaleString('vi-VN') + 'đ';
+  document.getElementById('invoice-amount').textContent = amount.toLocaleString('vi-VN') + 'đ';
+  const vatAmount = Math.round(amount * vat / 100);
+  document.getElementById('invoice-vat').textContent = vatAmount.toLocaleString('vi-VN') + 'đ';
+  const total = amount + vatAmount;
+  document.getElementById('invoice-total').textContent = total.toLocaleString('vi-VN') + 'đ';
+  document.getElementById('invoice-cost-center').textContent = costCenter;
+  document.getElementById('invoice-status').textContent = number.includes('0156') ? '⚠ Xem xét' : '✓ Đã khớp';
+  document.getElementById('invoice-status').className = number.includes('0156') ? 'badge badge-yellow' : 'badge badge-green';
+  showModal('modal-invoice');
+}
+
+function downloadInvoicePDF(invoiceNumber){
+  showToast(`📥 Đang tải hóa đơn ${invoiceNumber}...`, 'blue');
+  setTimeout(() => showToast(`✓ Tải hóa đơn ${invoiceNumber} thành công!`, 'green'), 1500);
+}
 function doExport(){ showToast('📥 Đang xuất báo cáo Excel...','blue'); }
 
 function showToast(msg, type){
@@ -1360,8 +2048,13 @@ function showToast(msg, type){
   setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 3000);
 }
 
-// INIT
-document.getElementById('topbar-date').textContent = '14/05/2026';
+// ══════════════════════════════════════
+//  INITIALIZATION
+// ══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('topbar-date').textContent = '14/05/2026';
+  // BookingWizard.init() được gọi trong renderBook() khi user navigate tới trang
+});
 </script>
 </body>
 </html>
