@@ -2030,11 +2030,7 @@ function showToast(msg, type){
 // ══════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('topbar-date').textContent = '14/05/2026';
-
-  // Initialize wizard on page load
-  if (document.getElementById('booking-wizard')) {
-    BookingWizard.init();
-  }
+  // BookingWizard.init() được gọi trong renderBook() khi user navigate tới trang
 });
 </script>
 </body>
