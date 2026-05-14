@@ -1,4 +1,15 @@
 <!DOCTYPE html>
+<!--
+  VNPAY Travel Demo v2.1 - Bug Fixes
+
+  Version History:
+  - v2.1 (Current): Critical bug fixes for booking wizard
+    * Fixed renderSteps to show only current step
+    * Fixed step 5 visibility (only show after service type selected)
+    * Improved booking flow - no auto-select of combos
+  - v2.0: Booking wizard refactor to step-based UI
+  - v1.0: Initial VNPAY Travel demo
+-->
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
@@ -433,6 +444,7 @@
 <div id="main">
   <div class="topbar">
     <div class="topbar-title" id="topbar-title">Tổng quan</div>
+    <div style="font-size:10px;color:var(--gray3);margin-left:auto;margin-right:16px">v2.1 (Bug Fixes)</div>
     <div class="topbar-actions">
       <span style="font-size:12px;color:var(--gray3)" id="topbar-date"></span>
       <div class="notif-btn" onclick="toggleNotif()">🔔<div class="notif-dot" id="notif-dot"></div></div>
