@@ -1700,7 +1700,7 @@ const BookingWizard = (() => {
     2: { visible: (st) => ['flight-only', 'flight-hotel', 'flight-hotel-taxi'].includes(st), title: 'Chọn chuyến bay' },
     3: { visible: (st) => ['flight-hotel', 'flight-hotel-taxi', 'hotel-only'].includes(st), title: 'Chọn khách sạn' },
     4: { visible: (st) => ['flight-hotel-taxi', 'transport-only'].includes(st), title: 'Thêm giao thông' },
-    5: { visible: true, title: 'Xác nhận đơn hàng' }
+    5: { visible: (st) => st !== null, title: 'Xác nhận đơn hàng' }
   };
 
   function getVisibleSteps() {
