@@ -1730,13 +1730,10 @@ const BookingWizard = (() => {
 
     allSteps.forEach(step => {
       const stepNum = parseInt(step.getAttribute('data-step'));
-      if (visible.includes(stepNum)) {
+      // Only show current step if it's in visible steps
+      if (stepNum === state.currentStep && visible.includes(stepNum)) {
         step.style.display = 'block';
-        if (stepNum === state.currentStep) {
-          step.classList.add('active');
-        } else {
-          step.classList.remove('active');
-        }
+        step.classList.add('active');
       } else {
         step.style.display = 'none';
         step.classList.remove('active');
