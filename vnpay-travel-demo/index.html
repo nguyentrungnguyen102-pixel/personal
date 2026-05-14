@@ -436,7 +436,7 @@
     <div class="topbar-actions">
       <span style="font-size:12px;color:var(--gray3)" id="topbar-date"></span>
       <div class="notif-btn" onclick="toggleNotif()">🔔<div class="notif-dot" id="notif-dot"></div></div>
-      <button class="btn btn-primary btn-sm" onclick="showModal('modal-trip')">+ Tạo Trip Request</button>
+      <button class="btn btn-primary btn-sm" onclick="navigate('book')">+ Tạo Trip Request</button>
     </div>
   </div>
 
@@ -1775,11 +1775,15 @@ const BookingWizard = (() => {
 
   function goToStep(step) {
     const visible = getVisibleSteps();
+    console.log('goToStep called with step:', step, 'visible steps:', visible);
     if (visible.includes(step)) {
       state.currentStep = step;
+      console.log('Moving to step:', step);
       renderSteps();
       updateProgress();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      console.warn('Step', step, 'not in visible steps:', visible);
     }
   }
 
@@ -1834,28 +1838,53 @@ const BookingWizard = (() => {
   function init() {
     // Event delegation - single listener for all interactions
     document.addEventListener('change', (e) => {
-      handleServiceTypeChange(e);
+      if (e.target.name === 'serviceType') {
+        console.log('Service type changed:', e.target.value);
+        handleServiceTypeChange(e);
+      }
     });
 
-    document.addEventListener('click', (e) => {
-      if (e.target.id === 'btn-next') {
+    // Handle Next button
+    const btnNext = document.getElementById('btn-next');
+    if (btnNext) {
+      btnNext.addEventListener('click', (e) => {
+        console.log('Next button clicked, current step:', state.currentStep);
+        e.preventDefault();
+        e.stopPropagation();
         const visible = getVisibleSteps();
         const currentIndex = visible.indexOf(state.currentStep);
+        console.log('Visible steps:', visible, 'Current index:', currentIndex);
         if (currentIndex === visible.length - 1) {
+          console.log('On last step, completing booking');
           completeBooking();
         } else {
-          goToStep(getNextVisibleStep(state.currentStep));
+          const nextStep = getNextVisibleStep(state.currentStep);
+          console.log('Going to next step:', nextStep);
+          goToStep(nextStep);
         }
-      }
-      if (e.target.id === 'btn-back') {
+      });
+    }
+
+    // Handle Back button
+    const btnBack = document.getElementById('btn-back');
+    if (btnBack) {
+      btnBack.addEventListener('click', (e) => {
+        console.log('Back button clicked');
+        e.preventDefault();
+        e.stopPropagation();
         goToStep(getPrevVisibleStep(state.currentStep));
-      }
+      });
+    }
+
+    // Handle card clicks with delegation
+    document.addEventListener('click', (e) => {
       handleFlightCardClick(e);
       handleHotelCardClick(e);
       handleTransportCardClick(e);
     });
 
     // Initial render
+    console.log('BookingWizard initializing...');
     renderSteps();
     updateProgress();
   }
