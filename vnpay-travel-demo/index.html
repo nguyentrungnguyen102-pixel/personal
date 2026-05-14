@@ -1359,6 +1359,9 @@ function renderBook(c){
     </div>
   </section>
   `;
+
+  // Initialize wizard after rendering HTML
+  setTimeout(() => BookingWizard.init(), 0);
 }
 
 // ══════════════════════════════════════
