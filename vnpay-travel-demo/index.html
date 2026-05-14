@@ -32,7 +32,7 @@
       z-index:100;transition:.3s
     }
     .sb-logo{padding:20px 20px 12px;border-bottom:1px solid rgba(255,255,255,.15);display:flex;align-items:center;gap:10px}
-    .sb-logo img{height:36px;filter:brightness(0) invert(1)}
+    .sb-logo img{height:36px;filter:invert(1) brightness(1.1) contrast(1.1);opacity:0.95}
     .sb-logo span{font-size:11px;color:rgba(255,255,255,.6);line-height:1.3}
     .sb-user{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px}
     .sb-avatar{width:36px;height:36px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
@@ -558,6 +558,77 @@
   </div>
 </div>
 
+<!-- MODAL INVOICE DETAIL -->
+<div class="modal-overlay" id="modal-invoice">
+  <div class="modal" style="width:600px">
+    <div class="modal-title">🧾 Chi tiết Hóa đơn</div>
+    <div style="background:var(--gray1);border-radius:10px;padding:20px;margin-bottom:16px;border-left:4px solid var(--blue)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:16px;font-weight:800;color:var(--blue)" id="invoice-number">#VAT-0158</div>
+        <span class="badge badge-green" id="invoice-status">✓ Đã khớp</span>
+      </div>
+      <div style="font-size:12px;color:var(--gray3);line-height:1.6">
+        Nhân viên: <b id="invoice-employee">Nguyễn Minh Tuấn</b><br/>
+        Ngày tạo: <b id="invoice-date">15/05/2026 09:15</b><br/>
+        Dịch vụ: <b id="invoice-service">✈️ VietJet VJ134</b>
+      </div>
+    </div>
+
+    <div class="card" style="padding:16px;margin-bottom:16px;border:1px solid var(--gray2);background:#fff">
+      <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--gray2)">
+        <div style="font-size:12px;color:var(--gray3);margin-bottom:8px">Thông tin hóa đơn VAT</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>Mã số thuế công ty (VNPAY):</span><span style="font-weight:700">0103952347</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>Tên công ty:</span><span style="font-weight:700">VNPAY JSC</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>Địa chỉ:</span><span style="font-weight:700">Hà Nội, Việt Nam</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--gray2)">
+        <div style="font-size:12px;color:var(--gray3);margin-bottom:8px">Chi tiết dịch vụ</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span id="invoice-item-desc">Vé máy bay VietJet VJ134</span>
+          <span id="invoice-item-qty">1 chiều</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>Đơn giá:</span><span id="invoice-unit-price">1.850.000đ</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>Số lượng:</span><span>1</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700">
+          <span>Thành tiền:</span><span id="invoice-subtotal">1.850.000đ</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--gray2)">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>Tiền hàng:</span><span id="invoice-amount">1.850.000đ</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>VAT 10% (nội):</span><span id="invoice-vat">185.000đ</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;color:var(--blue)">
+          <span>Tổng cộng:</span><span id="invoice-total">2.035.000đ</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;padding:10px 12px;background:#EBF0FA;border-radius:6px;font-size:12px">
+        Cost Center: <b id="invoice-cost-center">BD-HCM-001</b>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-invoice')">Đóng</button>
+      <button class="btn btn-outline btn-sm" onclick="downloadInvoicePDF()">📥 Tải PDF</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ══════════════════════════════════════
 //  DATA
@@ -893,44 +964,199 @@ function renderBook(c){
     </div>
   </div>
 
-  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-    <button class="btn btn-primary btn-sm">✈️ Vé máy bay</button>
-    <button class="btn btn-ghost btn-sm">🏨 Khách sạn</button>
-    <button class="btn btn-ghost btn-sm">🚖 Taxi</button>
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+    <button class="btn btn-primary btn-sm" onclick="showService('flight')">✈️ Vé máy bay</button>
+    <button class="btn btn-ghost btn-sm" onclick="showService('hotel')">🏨 Khách sạn</button>
+    <button class="btn btn-ghost btn-sm" onclick="showService('taxi')">🚖 Taxi</button>
     <button class="btn btn-ghost btn-sm">🚌 Xe khách</button>
     <button class="btn btn-ghost btn-sm">🚆 Tàu hỏa</button>
+    <div style="margin-left:auto;border-left:1px solid var(--gray2);padding-left:12px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
+        <input type="checkbox" id="roundtrip-toggle" onchange="toggleRoundTrip()" />
+        <span style="font-weight:600">Khứ hồi</span>
+      </label>
+    </div>
   </div>
 
   <div class="grid-2">
     <div class="card">
-      <div class="card-title">✈️ Chọn chuyến bay HAN → DAD</div>
+      <div id="flight-section">
+        <div class="card-title">✈️ Chọn chuyến bay HAN → DAD</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <select class="form-control" style="width:auto"><option>Economy</option><option>Business</option></select>
+          <select class="form-control" style="width:auto"><option>Sắp xếp: Giá thấp nhất</option><option>Giờ khởi hành sớm nhất</option></select>
+        </div>
+
+        <div class="flight-card selected" onclick="selectFlight(this,'outbound')">
+          <div><div class="flight-airline">VietJet Air VJ532</div><div class="flight-time">06:10 → 08:00</div></div>
+          <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h50</div></div>
+          <div class="flight-price"><div class="price">1.250.000đ</div><span class="badge badge-green">✓ Policy</span></div>
+        </div>
+
+        <div class="flight-card" onclick="selectFlight(this,'outbound')">
+          <div><div class="flight-airline">Vietnam Airlines VN1540</div><div class="flight-time">08:30 → 10:25</div></div>
+          <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h55</div></div>
+          <div class="flight-price"><div class="price">1.890.000đ</div><span class="badge badge-yellow">⚠ Gần hạn mức</span></div>
+        </div>
+
+        <div class="flight-card" onclick="selectFlight(this,'outbound')">
+          <div><div class="flight-airline">Bamboo Airways QH102</div><div class="flight-time">10:00 → 11:50</div></div>
+          <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h50</div></div>
+          <div class="flight-price"><div class="price">1.680.000đ</div><span class="badge badge-green">✓ Policy</span></div>
+        </div>
+
+        <div class="flight-card" onclick="selectFlight(this,'outbound')" style="opacity:.7">
+          <div><div class="flight-airline">Vietnam Airlines VN1540 — Business</div><div class="flight-time">08:30 → 10:25</div></div>
+          <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h55</div></div>
+          <div class="flight-price"><div class="price">4.500.000đ</div><span class="badge badge-red">✗ Vượt policy</span></div>
+        </div>
+
+        <div id="return-flight-section" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--gray2)">
+          <div class="card-title" style="margin-bottom:14px">✈️ Chuyến về DAD → HAN</div>
+          <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+            <select class="form-control" style="width:auto"><option>Economy</option><option>Business</option></select>
+            <select class="form-control" style="width:auto"><option>Sắp xếp: Giá thấp nhất</option><option>Giờ khởi hành sớm nhất</option></select>
+          </div>
+
+          <div class="flight-card" onclick="selectFlight(this,'return')">
+            <div><div class="flight-airline">VietJet Air VJ531</div><div class="flight-time">10:20 → 12:15</div></div>
+            <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">DAD ─── HAN</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h55</div></div>
+            <div class="flight-price"><div class="price">1.250.000đ</div><span class="badge badge-green">✓ Policy</span></div>
+          </div>
+
+          <div class="flight-card selected" onclick="selectFlight(this,'return')">
+            <div><div class="flight-airline">Vietnam Airlines VN1541</div><div class="flight-time">14:40 → 16:45</div></div>
+            <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">DAD ─── HAN</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">2h05</div></div>
+            <div class="flight-price"><div class="price">1.890.000đ</div><span class="badge badge-green">✓ Policy</span></div>
+          </div>
+
+          <div class="flight-card" onclick="selectFlight(this,'return')">
+            <div><div class="flight-airline">Bamboo Airways QH101</div><div class="flight-time">16:00 → 17:50</div></div>
+            <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">DAD ─── HAN</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h50</div></div>
+            <div class="flight-price"><div class="price">1.680.000đ</div><span class="badge badge-green">✓ Policy</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOTEL BOOKING SECTION -->
+    <div class="card" id="hotel-section" style="display:none">
+      <div class="card-title">🏨 Tìm khách sạn ở Đà Nẵng</div>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-        <select class="form-control" style="width:auto"><option>Economy</option><option>Business</option></select>
-        <select class="form-control" style="width:auto"><option>Sắp xếp: Giá thấp nhất</option><option>Giờ khởi hành sớm nhất</option></select>
+        <input type="date" class="form-control" style="width:auto" value="2026-05-08" />
+        <input type="date" class="form-control" style="width:auto" value="2026-05-09" />
+        <select class="form-control" style="width:auto"><option>Tất cả sao</option><option>5 sao</option><option>4 sao</option></select>
+        <select class="form-control" style="width:auto"><option>Giá thấp nhất</option><option>Gần nhất</option></select>
       </div>
 
-      <div class="flight-card selected" onclick="selectFlight(this)">
-        <div><div class="flight-airline">VietJet Air VJ532</div><div class="flight-time">06:10 → 08:00</div></div>
-        <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h50</div></div>
-        <div class="flight-price"><div class="price">1.250.000đ</div><span class="badge badge-green">✓ Policy</span></div>
+      <div style="border:1.5px solid var(--gray2);border-radius:10px;padding:12px;margin-bottom:10px;cursor:pointer;transition:.2s" onclick="selectHotel(this)">
+        <div style="display:flex;gap:10px">
+          <div style="font-size:32px">🏢</div>
+          <div style="flex:1">
+            <div style="font-weight:700;color:var(--blue)">Pullman Saigon Danang Beach Resort</div>
+            <div style="font-size:12px;color:var(--gray3);margin-bottom:6px">⭐⭐⭐⭐⭐ • 5 sao • 500m từ bãi biển</div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px">1.500.000đ / đêm</span>
+              <span class="badge badge-red">✗ Vượt policy (limit 1.5M)</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="flight-card" onclick="selectFlight(this)">
-        <div><div class="flight-airline">Vietnam Airlines VN1540</div><div class="flight-time">08:30 → 10:25</div></div>
-        <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h55</div></div>
-        <div class="flight-price"><div class="price">1.890.000đ</div><span class="badge badge-yellow">⚠ Gần hạn mức</span></div>
+      <div style="border:1.5px solid var(--blue);border-radius:10px;padding:12px;margin-bottom:10px;cursor:pointer;transition:.2s;background:var(--gray1)" onclick="selectHotel(this)">
+        <div style="display:flex;gap:10px">
+          <div style="font-size:32px">🏨</div>
+          <div style="flex:1">
+            <div style="font-weight:700;color:var(--blue)">Mường Thanh Danang Beach Hotel</div>
+            <div style="font-size:12px;color:var(--gray3);margin-bottom:6px">⭐⭐⭐ • 3 sao • 2km từ sân bay</div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px">850.000đ / đêm</span>
+              <span class="badge badge-green">✓ Trong policy</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="flight-card" onclick="selectFlight(this)">
-        <div><div class="flight-airline">Bamboo Airways QH102</div><div class="flight-time">10:00 → 11:50</div></div>
-        <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h50</div></div>
-        <div class="flight-price"><div class="price">1.680.000đ</div><span class="badge badge-green">✓ Policy</span></div>
+      <div style="border:1.5px solid var(--gray2);border-radius:10px;padding:12px;margin-bottom:10px;cursor:pointer;transition:.2s" onclick="selectHotel(this)">
+        <div style="display:flex;gap:10px">
+          <div style="font-size:32px">🏩</div>
+          <div style="flex:1">
+            <div style="font-weight:700;color:var(--blue)">Novotel Danang Premier Han Market</div>
+            <div style="font-size:12px;color:var(--gray3);margin-bottom:6px">⭐⭐⭐⭐ • 4 sao • Trung tâm thành phố</div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px">1.200.000đ / đêm</span>
+              <span class="badge badge-yellow">⚠ Gần hạn mức</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="flight-card" onclick="selectFlight(this)" style="opacity:.7">
-        <div><div class="flight-airline">Vietnam Airlines VN1540 — Business</div><div class="flight-time">08:30 → 10:25</div></div>
-        <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h55</div></div>
-        <div class="flight-price"><div class="price">4.500.000đ</div><span class="badge badge-red">✗ Vượt policy</span></div>
+      <div style="border:1.5px solid var(--gray2);border-radius:10px;padding:12px;margin-bottom:10px;cursor:pointer;transition:.2s" onclick="selectHotel(this)">
+        <div style="display:flex;gap:10px">
+          <div style="font-size:32px">🛏️</div>
+          <div style="flex:1">
+            <div style="font-weight:700;color:var(--blue)">Danang Riverside Hotel</div>
+            <div style="font-size:12px;color:var(--gray3);margin-bottom:6px">⭐⭐ • 2 sao • Gần sông Hàn</div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px">420.000đ / đêm</span>
+              <span class="badge badge-green">✓ Trong policy</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAXI BOOKING SECTION -->
+    <div class="card" id="taxi-section" style="display:none">
+      <div class="card-title">🚖 Đặt xe đi lẻ / Taxi</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <select class="form-control" style="width:auto">
+          <option>Địa điểm đón</option>
+          <option>Sân bay Đà Nẵng (T1)</option>
+          <option>Khách sạn</option>
+          <option>Văn phòng VNPAY</option>
+        </select>
+        <input type="text" class="form-control" style="width:150px" placeholder="Điểm trả khách..." />
+        <input type="time" class="form-control" style="width:auto" value="08:30" />
+      </div>
+
+      <div style="border:1.5px solid var(--gray2);border-radius:10px;padding:12px;margin-bottom:10px;cursor:pointer;transition:.2s" onclick="selectTaxi(this)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="flex:1">
+            <div style="font-weight:700;color:var(--blue)">🚗 XanhSM (Xe công nghệ)</div>
+            <div style="font-size:12px;color:var(--gray3)">Thời gian: 15-20 phút • Rating: 4.9/5</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:700;font-size:16px">280.000đ</div>
+            <span class="badge badge-green" style="margin-top:4px">✓ Policy</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="border:1.5px solid var(--blue);border-radius:10px;padding:12px;margin-bottom:10px;cursor:pointer;transition:.2s;background:var(--gray1)" onclick="selectTaxi(this)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="flex:1">
+            <div style="font-weight:700;color:var(--blue)">🚕 Grab (Xe công nghệ)</div>
+            <div style="font-size:12px;color:var(--gray3)">Thời gian: 12-18 phút • Rating: 4.8/5</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:700;font-size:16px">300.000đ</div>
+            <span class="badge badge-green" style="margin-top:4px">✓ Policy</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="border:1.5px solid var(--gray2);border-radius:10px;padding:12px;margin-bottom:10px;cursor:pointer;transition:.2s" onclick="selectTaxi(this)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="flex:1">
+            <div style="font-weight:700;color:var(--blue)">🚙 Xe Taxi truyền thống</div>
+            <div style="font-size:12px;color:var(--gray3)">Thời gian: 10-25 phút • Thanh toán tiền mặt</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:700;font-size:16px">250.000đ</div>
+            <span class="badge badge-green" style="margin-top:4px">✓ Policy</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1162,16 +1388,26 @@ function renderInvoice(c){
 }
 
 function invoiceTableHTML(){
-  return `<table class="tbl">
+  const invoices = [
+    {number:'#VAT-0158', employee:'Nguyễn M. Tuấn', service:'✈️ VietJet VJ134', amount:1850000, vat:10, costCenter:'BD-HCM-001', status:'Khớp', statusBadge:'badge-green'},
+    {number:'#VAT-0157', employee:'Nguyễn M. Tuấn', service:'🏨 Pullman SGN', amount:1800000, vat:10, costCenter:'BD-HCM-001', status:'Khớp', statusBadge:'badge-green'},
+    {number:'#VAT-0156', employee:'Phạm K. Linh', service:'✈️ VN1540', amount:1890000, vat:8, costCenter:'BD-HCM-001', status:'Xem xét', statusBadge:'badge-yellow'},
+    {number:'#VAT-0155', employee:'Lê M. Khoa', service:'🚖 XanhSM', amount:180000, vat:10, costCenter:'TECH-001', status:'Khớp', statusBadge:'badge-green'},
+    {number:'#VAT-0154', employee:'Hoàng T. Mai', service:'🏨 Mường Thanh', amount:750000, vat:8, costCenter:'SALES-HN-002', status:'Khớp', statusBadge:'badge-green'}
+  ];
+
+  let html = `<table class="tbl">
     <thead><tr><th>Số HĐ</th><th>Nhân viên</th><th>Dịch vụ</th><th>Giá trị</th><th>VAT</th><th>Cost Center</th><th>Đối soát</th><th>Action</th></tr></thead>
-    <tbody>
-      <tr><td><b>#VAT-0158</b></td><td>Nguyễn M. Tuấn</td><td>✈️ VietJet VJ134</td><td>1.850.000đ</td><td>10%</td><td>BD-HCM-001</td><td><span class="badge badge-green">✓ Khớp</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
-      <tr><td><b>#VAT-0157</b></td><td>Nguyễn M. Tuấn</td><td>🏨 Pullman SGN</td><td>1.800.000đ</td><td>10%</td><td>BD-HCM-001</td><td><span class="badge badge-green">✓ Khớp</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
-      <tr><td><b>#VAT-0156</b></td><td>Phạm K. Linh</td><td>✈️ VN1540</td><td>1.890.000đ</td><td>8%</td><td>BD-HCM-001</td><td><span class="badge badge-yellow">⚠ Xem xét</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
-      <tr><td><b>#VAT-0155</b></td><td>Lê M. Khoa</td><td>🚖 XanhSM</td><td>180.000đ</td><td>10%</td><td>TECH-001</td><td><span class="badge badge-green">✓ Khớp</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
-      <tr><td><b>#VAT-0154</b></td><td>Hoàng T. Mai</td><td>🏨 Mường Thanh</td><td>750.000đ</td><td>8%</td><td>SALES-HN-002</td><td><span class="badge badge-green">✓ Khớp</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
-    </tbody>
-  </table>`;
+    <tbody>`;
+
+  invoices.forEach(inv => {
+    html += `<tr style="cursor:pointer" onclick="showInvoice('${inv.number}','${inv.employee}','${inv.service}',${inv.amount},${inv.vat},'${inv.costCenter}')">
+      <td><b>${inv.number}</b></td><td>${inv.employee}</td><td>${inv.service}</td><td>${(inv.amount).toLocaleString('vi-VN')}đ</td><td>${inv.vat}%</td><td>${inv.costCenter}</td><td><span class="badge ${inv.statusBadge}">${inv.status === 'Khớp' ? '✓ Khớp' : '⚠ Xem xét'}</span></td><td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); downloadInvoicePDF('${inv.number}')">PDF</button></td>
+    </tr>`;
+  });
+
+  html += `</tbody></table>`;
+  return html;
 }
 
 // ══════════════════════════════════════
@@ -1323,9 +1559,88 @@ function updateTripStep(){
   document.getElementById('btn-modal-cancel').textContent='Hủy';
 }
 
-function selectFlight(el){
-  document.querySelectorAll('.flight-card').forEach(c=>c.classList.remove('selected'));
+let isRoundTrip = false;
+let currentService = 'flight';
+
+function showService(service){
+  currentService = service;
+  document.getElementById('flight-section').style.display = service === 'flight' ? 'block' : 'none';
+  document.getElementById('hotel-section').style.display = service === 'hotel' ? 'block' : 'none';
+  document.getElementById('taxi-section').style.display = service === 'taxi' ? 'block' : 'none';
+
+  const buttons = document.querySelectorAll('div > .btn');
+  buttons.forEach(b => b.classList.remove('btn-primary'));
+  buttons.forEach(b => b.classList.add('btn-ghost'));
+  buttons.forEach(b => {
+    const emoji = b.textContent.split('')[0];
+    if((service === 'flight' && emoji === '✈️') ||
+       (service === 'hotel' && emoji === '🏨') ||
+       (service === 'taxi' && emoji === '🚖')){
+      b.classList.remove('btn-ghost');
+      b.classList.add('btn-primary');
+    }
+  });
+}
+
+function selectHotel(el){
+  document.querySelectorAll('#hotel-section > div:nth-child(n+3)').forEach(c=>{
+    if(c.style.borderColor) delete c.style.borderColor;
+    if(c.style.background) delete c.style.background;
+  });
+  el.style.borderColor = 'var(--blue)';
+  el.style.background = 'var(--gray1)';
+  const hotelName = el.querySelector('div[style*="color:var(--blue)"]').textContent;
+  const hotelPrice = el.querySelector('div[style*="font-size:13px"]').textContent.match(/\d+\.\d+/)[0];
+  showToast(`✓ Đã chọn khách sạn: ${hotelName}`,'green');
+}
+
+function selectTaxi(el){
+  document.querySelectorAll('#taxi-section > div:nth-child(n+3)').forEach(c=>{
+    if(c.style.borderColor) delete c.style.borderColor;
+    if(c.style.background) delete c.style.background;
+  });
+  el.style.borderColor = 'var(--blue)';
+  el.style.background = 'var(--gray1)';
+  const taxiName = el.querySelector('div[style*="color:var(--blue)"]').textContent;
+  showToast(`✓ Đã chọn: ${taxiName}`,'green');
+}
+function toggleRoundTrip(){
+  isRoundTrip = document.getElementById('roundtrip-toggle').checked;
+  const returnSection = document.getElementById('return-flight-section');
+  if(isRoundTrip){
+    returnSection.style.display='block';
+    updateServiceCartPrices();
+  } else {
+    returnSection.style.display='none';
+    updateServiceCartPrices();
+  }
+}
+
+function selectFlight(el, legType){
+  const section = legType === 'return' ? '#return-flight-section' : '#flight-section';
+  document.querySelectorAll(section + ' .flight-card').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
+  updateServiceCartPrices();
+}
+
+function updateServiceCartPrices(){
+  const outboundFlight = document.querySelector('#flight-section .flight-card.selected');
+  const returnFlight = isRoundTrip ? document.querySelector('#return-flight-section .flight-card.selected') : null;
+
+  if(!outboundFlight) return;
+
+  const outboundPrice = parseInt(outboundFlight.querySelector('.price').textContent.replace(/\D/g,''));
+  const hotelPrice = 850000;
+  const taxiPrice = 150000;
+  const returnPrice = returnFlight ? parseInt(returnFlight.querySelector('.price').textContent.replace(/\D/g,'')) : 0;
+
+  const total = outboundPrice + hotelPrice + taxiPrice + returnPrice;
+  const totalFormatted = total.toLocaleString('vi-VN') + 'đ';
+
+  const totalDiv = document.querySelector('div[style*="display:flex;justify-content:space-between;font-size:15px"]');
+  if(totalDiv){
+    totalDiv.querySelector('span:last-child').textContent = totalFormatted;
+  }
 }
 
 function quickApprove(id){
@@ -1349,6 +1664,30 @@ function quickReject(id){
 function doApprove(){ closeModal('modal-approve'); showToast('✓ Đã phê duyệt thành công!','green'); }
 function doReject(){ closeModal('modal-approve'); showToast('✗ Đã từ chối yêu cầu','red'); }
 function doBook(){ showToast('🎉 Đặt vé thành công! E-invoice sẽ được gửi trong 5 phút.','green'); }
+
+function showInvoice(number, employee, service, amount, vat, costCenter){
+  document.getElementById('invoice-number').textContent = number;
+  document.getElementById('invoice-employee').textContent = employee;
+  document.getElementById('invoice-date').textContent = new Date().toLocaleDateString('vi-VN') + ' 09:15';
+  document.getElementById('invoice-service').textContent = service;
+  document.getElementById('invoice-item-desc').textContent = service.substring(2);
+  document.getElementById('invoice-unit-price').textContent = amount.toLocaleString('vi-VN') + 'đ';
+  document.getElementById('invoice-subtotal').textContent = amount.toLocaleString('vi-VN') + 'đ';
+  document.getElementById('invoice-amount').textContent = amount.toLocaleString('vi-VN') + 'đ';
+  const vatAmount = Math.round(amount * vat / 100);
+  document.getElementById('invoice-vat').textContent = vatAmount.toLocaleString('vi-VN') + 'đ';
+  const total = amount + vatAmount;
+  document.getElementById('invoice-total').textContent = total.toLocaleString('vi-VN') + 'đ';
+  document.getElementById('invoice-cost-center').textContent = costCenter;
+  document.getElementById('invoice-status').textContent = number.includes('0156') ? '⚠ Xem xét' : '✓ Đã khớp';
+  document.getElementById('invoice-status').className = number.includes('0156') ? 'badge badge-yellow' : 'badge badge-green';
+  showModal('modal-invoice');
+}
+
+function downloadInvoicePDF(invoiceNumber){
+  showToast(`📥 Đang tải hóa đơn ${invoiceNumber}...`, 'blue');
+  setTimeout(() => showToast(`✓ Tải hóa đơn ${invoiceNumber} thành công!`, 'green'), 1500);
+}
 function doExport(){ showToast('📥 Đang xuất báo cáo Excel...','blue'); }
 
 function showToast(msg, type){
