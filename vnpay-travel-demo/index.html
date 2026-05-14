@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VNPAY Travel — Quản lý Công tác Nội bộ</title>
+  <style>
+    :root {
+      --red:     #E31E24;
+      --blue:    #003A87;
+      --lblue:   #00A9E0;
+      --bg:      #F4F6FA;
+      --white:   #FFFFFF;
+      --gray1:   #F8F9FC;
+      --gray2:   #E8ECF4;
+      --gray3:   #9BA5B4;
+      --text:    #1A2340;
+      --green:   #17A948;
+      --orange:  #F59E0B;
+      --shadow:  0 2px 12px rgba(0,58,135,.10);
+      --radius:  12px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+    a{text-decoration:none;color:inherit}
+    button{cursor:pointer;font-family:inherit}
+
+    /* ── SIDEBAR ── */
+    #sidebar{
+      position:fixed;top:0;left:0;width:240px;height:100vh;
+      background:var(--blue);color:#fff;display:flex;flex-direction:column;
+      z-index:100;transition:.3s
+    }
+    .sb-logo{padding:20px 20px 12px;border-bottom:1px solid rgba(255,255,255,.15);display:flex;align-items:center;gap:10px}
+    .sb-logo img{height:36px;filter:brightness(0) invert(1)}
+    .sb-logo span{font-size:11px;color:rgba(255,255,255,.6);line-height:1.3}
+    .sb-user{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px}
+    .sb-avatar{width:36px;height:36px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+    .sb-uname{font-size:13px;font-weight:600}
+    .sb-urole{font-size:11px;color:rgba(255,255,255,.55)}
+    .sb-nav{flex:1;overflow-y:auto;padding:10px 0}
+    .sb-section{font-size:10px;letter-spacing:.08em;color:rgba(255,255,255,.4);padding:12px 20px 4px;text-transform:uppercase}
+    .sb-item{display:flex;align-items:center;gap:10px;padding:10px 20px;color:rgba(255,255,255,.8);border-left:3px solid transparent;cursor:pointer;transition:.2s;font-size:13px}
+    .sb-item:hover{background:rgba(255,255,255,.08);color:#fff}
+    .sb-item.active{background:rgba(255,255,255,.12);color:#fff;border-left-color:var(--lblue)}
+    .sb-item .ic{font-size:16px;width:20px;text-align:center}
+    .sb-badge{margin-left:auto;background:var(--red);border-radius:20px;font-size:10px;padding:1px 7px;font-weight:700}
+    .sb-roles{padding:12px 20px;border-top:1px solid rgba(255,255,255,.12)}
+    .sb-roles p{font-size:10px;color:rgba(255,255,255,.4);margin-bottom:6px}
+    .sb-role-btn{display:block;width:100%;padding:6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:transparent;color:rgba(255,255,255,.8);font-size:11px;margin-bottom:4px;text-align:left;cursor:pointer;transition:.2s}
+    .sb-role-btn:hover{background:rgba(255,255,255,.1)}
+    .sb-role-btn.active{background:var(--lblue);border-color:var(--lblue);color:#fff}
+
+    /* ── MAIN ── */
+    #main{margin-left:240px;min-height:100vh;display:flex;flex-direction:column}
+    .topbar{background:#fff;border-bottom:1px solid var(--gray2);padding:0 28px;height:56px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
+    .topbar-title{font-size:16px;font-weight:700;color:var(--blue);flex:1}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:none;font-size:13px;font-weight:600;transition:.2s}
+    .btn-primary{background:var(--blue);color:#fff}
+    .btn-primary:hover{background:#002d6a}
+    .btn-red{background:var(--red);color:#fff}
+    .btn-red:hover{background:#c01a1f}
+    .btn-outline{background:#fff;color:var(--blue);border:1.5px solid var(--blue)}
+    .btn-outline:hover{background:var(--blue);color:#fff}
+    .btn-ghost{background:transparent;color:var(--gray3);border:1.5px solid var(--gray2)}
+    .btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+    .btn-green{background:var(--green);color:#fff}
+    .btn-sm{padding:5px 12px;font-size:12px}
+    .notif-btn{position:relative;background:var(--gray1);border:1px solid var(--gray2);border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer}
+    .notif-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;background:var(--red);border-radius:50%}
+
+    /* ── CONTENT ── */
+    .content{padding:24px 28px;flex:1}
+
+    /* ── CARDS ── */
+    .card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+    .card-title{font-size:15px;font-weight:700;color:var(--blue);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+    /* ── KPI CARD ── */
+    .kpi{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;display:flex;align-items:center;gap:14px}
+    .kpi-icon{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+    .kpi-icon.blue{background:#EBF0FA}
+    .kpi-icon.red{background:#FDEAEA}
+    .kpi-icon.green{background:#EAFAF1}
+    .kpi-icon.orange{background:#FEF3CD}
+    .kpi-label{font-size:12px;color:var(--gray3);margin-bottom:4px}
+    .kpi-val{font-size:22px;font-weight:800;color:var(--blue)}
+    .kpi-sub{font-size:11px;color:var(--gray3);margin-top:2px}
+    .kpi-sub.up{color:var(--green)}
+    .kpi-sub.dn{color:var(--red)}
+
+    /* ── BADGE / STATUS ── */
+    .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-green{background:#EAFAF1;color:var(--green)}
+    .badge-yellow{background:#FEF3CD;color:#B45309}
+    .badge-red{background:#FDEAEA;color:var(--red)}
+    .badge-blue{background:#EBF0FA;color:var(--blue)}
+    .badge-gray{background:var(--gray2);color:var(--gray3)}
+
+    /* ── TABLE ── */
+    .tbl{width:100%;border-collapse:collapse;font-size:13px}
+    .tbl th{background:var(--gray1);color:var(--gray3);font-weight:600;padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+    .tbl td{padding:12px 14px;border-bottom:1px solid var(--gray2);vertical-align:middle}
+    .tbl tr:last-child td{border-bottom:none}
+    .tbl tr:hover td{background:var(--gray1)}
+
+    /* ── FORM ── */
+    .form-group{margin-bottom:16px}
+    .form-label{font-size:12px;font-weight:600;color:var(--gray3);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:.04em}
+    .form-control{width:100%;padding:10px 14px;border:1.5px solid var(--gray2);border-radius:8px;font-size:14px;color:var(--text);background:#fff;transition:.2s;outline:none}
+    .form-control:focus{border-color:var(--blue)}
+    select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239BA5B4' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .budget-bar-wrap{background:var(--gray2);border-radius:20px;height:8px;overflow:hidden;margin-top:6px}
+    .budget-bar{height:100%;border-radius:20px;transition:.6s}
+
+    /* ── FLIGHT CARD ── */
+    .flight-card{border:1.5px solid var(--gray2);border-radius:10px;padding:16px;display:flex;align-items:center;gap:16px;margin-bottom:10px;cursor:pointer;transition:.2s}
+    .flight-card:hover{border-color:var(--blue);background:var(--gray1)}
+    .flight-card.selected{border-color:var(--blue);background:#EBF0FA}
+    .flight-airline{font-size:11px;color:var(--gray3);margin-bottom:2px}
+    .flight-time{font-size:20px;font-weight:800;color:var(--text)}
+    .flight-route{flex:1;text-align:center}
+    .flight-line{height:2px;background:var(--gray2);position:relative;margin:6px 0}
+    .flight-line::after{content:'✈';position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-size:14px;color:var(--blue)}
+    .flight-price{text-align:right}
+    .flight-price .price{font-size:18px;font-weight:800;color:var(--blue)}
+    .flight-price .old{font-size:11px;text-decoration:line-through;color:var(--gray3)}
+
+    /* ── APPROVAL CARD ── */
+    .appr-card{border:1.5px solid var(--gray2);border-radius:10px;padding:16px;margin-bottom:12px;transition:.2s}
+    .appr-card:hover{border-color:var(--blue)}
+    .appr-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+    .appr-avatar{width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+    .appr-name{font-weight:700;font-size:14px}
+    .appr-sub{font-size:12px;color:var(--gray3)}
+    .appr-body{font-size:13px;color:var(--text);line-height:1.6;margin-bottom:12px}
+    .appr-meta{display:flex;gap:20px;font-size:12px;color:var(--gray3);margin-bottom:12px}
+    .appr-actions{display:flex;gap:8px}
+
+    /* ── TIMELINE ── */
+    .timeline{position:relative;padding-left:28px}
+    .timeline::before{content:'';position:absolute;left:10px;top:0;bottom:0;width:2px;background:var(--gray2)}
+    .tl-item{position:relative;margin-bottom:20px}
+    .tl-dot{position:absolute;left:-22px;top:3px;width:14px;height:14px;border-radius:50%;border:2px solid var(--blue);background:#fff}
+    .tl-dot.done{background:var(--green);border-color:var(--green)}
+    .tl-dot.pending{background:var(--orange);border-color:var(--orange)}
+    .tl-dot.rejected{background:var(--red);border-color:var(--red)}
+    .tl-title{font-weight:700;font-size:13px}
+    .tl-sub{font-size:12px;color:var(--gray3)}
+
+    /* ── BUDGET WIDGET ── */
+    .budget-widget{background:linear-gradient(135deg,var(--blue),#0050C8);border-radius:var(--radius);color:#fff;padding:20px}
+    .bw-label{font-size:12px;color:rgba(255,255,255,.7);margin-bottom:4px}
+    .bw-val{font-size:28px;font-weight:800;margin-bottom:2px}
+    .bw-total{font-size:12px;color:rgba(255,255,255,.6);margin-bottom:14px}
+    .bw-bar{background:rgba(255,255,255,.2);border-radius:20px;height:8px;overflow:hidden;margin-bottom:6px}
+    .bw-fill{background:var(--lblue);height:100%;border-radius:20px}
+    .bw-pct{font-size:11px;color:rgba(255,255,255,.7)}
+
+    /* ── CHART MOCK ── */
+    .chart-bars{display:flex;align-items:flex-end;gap:8px;height:100px;padding-top:10px}
+    .chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+    .chart-bar{width:100%;border-radius:4px 4px 0 0;transition:.4s}
+    .chart-bar-label{font-size:10px;color:var(--gray3);text-align:center}
+    .chart-bar-val{font-size:10px;color:var(--blue);font-weight:700}
+
+    /* ── PAGES ── */
+    .page{display:none}
+    .page.active{display:block}
+
+    /* ── LOGIN PAGE ── */
+    #page-login{
+      display:flex;align-items:center;justify-content:center;
+      min-height:100vh;background:linear-gradient(135deg,var(--blue) 0%,#0052CC 60%,var(--lblue) 100%);
+      margin-left:0 !important;
+    }
+    .login-box{background:#fff;border-radius:20px;padding:44px 40px;width:420px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+    .login-logo{text-align:center;margin-bottom:28px}
+    .login-logo img{height:72px}
+    .login-tagline{font-size:12px;color:var(--gray3);margin-top:6px}
+    .login-title{font-size:20px;font-weight:800;color:var(--blue);margin-bottom:4px;text-align:center}
+    .login-sub{font-size:13px;color:var(--gray3);margin-bottom:24px;text-align:center}
+    .sso-btn{width:100%;padding:14px;border-radius:10px;background:var(--blue);color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:10px}
+    .sso-btn:hover{background:#002d6a}
+    .divider{text-align:center;color:var(--gray3);font-size:12px;margin:16px 0;position:relative}
+    .divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--gray2)}
+    .divider::before{left:0}.divider::after{right:0}
+    .demo-roles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .demo-role-btn{padding:10px;border-radius:8px;border:1.5px solid var(--gray2);background:#fff;cursor:pointer;transition:.2s;text-align:center}
+    .demo-role-btn:hover{border-color:var(--blue);background:var(--gray1)}
+    .demo-role-btn .role-icon{font-size:20px;margin-bottom:4px}
+    .demo-role-btn .role-name{font-size:12px;font-weight:700;color:var(--blue)}
+    .demo-role-btn .role-sub{font-size:10px;color:var(--gray3)}
+
+    /* ── NOTIFICATION PANEL ── */
+    .notif-panel{position:fixed;top:56px;right:20px;width:340px;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.15);z-index:200;display:none;max-height:400px;overflow-y:auto}
+    .notif-panel.open{display:block}
+    .notif-header{padding:14px 16px;border-bottom:1px solid var(--gray2);font-weight:700;font-size:13px;color:var(--blue)}
+    .notif-item{padding:12px 16px;border-bottom:1px solid var(--gray2);display:flex;gap:10px;cursor:pointer}
+    .notif-item:hover{background:var(--gray1)}
+    .notif-item:last-child{border-bottom:none}
+    .notif-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+    .notif-text{font-size:12px;line-height:1.5}
+    .notif-time{font-size:10px;color:var(--gray3);margin-top:2px}
+
+    /* ── MODAL ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:none;align-items:center;justify-content:center}
+    .modal-overlay.open{display:flex}
+    .modal{background:#fff;border-radius:16px;padding:28px;width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+    .modal-title{font-size:18px;font-weight:800;color:var(--blue);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+    .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--gray2)}
+
+    /* ── STEP WIZARD ── */
+    .steps{display:flex;align-items:center;gap:0;margin-bottom:28px}
+    .step{display:flex;align-items:center;gap:8px;flex:1}
+    .step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+    .step.done .step-num{background:var(--green);color:#fff}
+    .step.active .step-num{background:var(--blue);color:#fff}
+    .step.inactive .step-num{background:var(--gray2);color:var(--gray3)}
+    .step-label{font-size:12px;font-weight:600}
+    .step.active .step-label{color:var(--blue)}
+    .step.done .step-label{color:var(--green)}
+    .step.inactive .step-label{color:var(--gray3)}
+    .step-line{flex:1;height:2px;background:var(--gray2);margin:0 4px}
+    .step.done .step-line{background:var(--green)}
+
+    /* Responsive */
+    @media(max-width:900px){
+      #sidebar{width:60px}
+      .sb-logo span,.sb-uname,.sb-urole,.sb-section,.sb-item span:not(.ic),.sb-badge,.sb-roles{display:none}
+      #main{margin-left:60px}
+      .grid-4{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════
+     LOGIN PAGE
+════════════════════════════════════ -->
+<div id="page-login" class="page active">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="assets/vnpay-logo.png" alt="VNPAY" />
+      <div class="login-tagline">Cho cuộc sống đơn giản hơn</div>
+    </div>
+    <h2 class="login-title">VNPAY Travel</h2>
+    <p class="login-sub">Hệ thống quản lý công tác nội bộ</p>
+    <button class="sso-btn" onclick="loginSSO()">
+      🔐 Đăng nhập bằng tài khoản VNPAY
+    </button>
+    <div class="divider">Hoặc chọn vai trò demo</div>
+    <div class="demo-roles">
+      <div class="demo-role-btn" onclick="loginAs('employee')">
+        <div class="role-icon">👤</div>
+        <div class="role-name">Nhân viên</div>
+        <div class="role-sub">Đặt dịch vụ công tác</div>
+      </div>
+      <div class="demo-role-btn" onclick="loginAs('manager')">
+        <div class="role-icon">👔</div>
+        <div class="role-name">Manager</div>
+        <div class="role-sub">Phê duyệt cấp 1</div>
+      </div>
+      <div class="demo-role-btn" onclick="loginAs('finance')">
+        <div class="role-icon">💼</div>
+        <div class="role-name">Finance/Admin</div>
+        <div class="role-sub">Phê duyệt cấp 2</div>
+      </div>
+      <div class="demo-role-btn" onclick="loginAs('accountant')">
+        <div class="role-icon">📊</div>
+        <div class="role-name">Kế toán</div>
+        <div class="role-sub">Hóa đơn & đối soát</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     APP SHELL (hidden until login)
+════════════════════════════════════ -->
+<div id="app-shell" style="display:none">
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sb-logo">
+    <img src="assets/vnpay-logo.png" alt="VNPAY" />
+    <span>VNPAY Travel<br/>v1.0 — Prototype</span>
+  </div>
+  <div class="sb-user">
+    <div class="sb-avatar" id="sb-avatar">NT</div>
+    <div>
+      <div class="sb-uname" id="sb-uname">Nguyễn Tuấn</div>
+      <div class="sb-urole" id="sb-urole">Senior BD</div>
+    </div>
+  </div>
+  <nav class="sb-nav" id="sb-nav"></nav>
+  <div class="sb-roles">
+    <p>Chuyển role demo</p>
+    <button class="sb-role-btn" onclick="loginAs('employee')">👤 Nhân viên</button>
+    <button class="sb-role-btn" onclick="loginAs('manager')">👔 Manager</button>
+    <button class="sb-role-btn" onclick="loginAs('finance')">💼 Finance</button>
+    <button class="sb-role-btn" onclick="loginAs('accountant')">📊 Kế toán</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Tổng quan</div>
+    <div class="topbar-actions">
+      <span style="font-size:12px;color:var(--gray3)" id="topbar-date"></span>
+      <div class="notif-btn" onclick="toggleNotif()">🔔<div class="notif-dot" id="notif-dot"></div></div>
+      <button class="btn btn-primary btn-sm" onclick="showModal('modal-trip')">+ Tạo Trip Request</button>
+    </div>
+  </div>
+
+  <div class="content" id="content">
+    <!-- pages rendered here -->
+  </div>
+</div>
+
+<!-- NOTIFICATION PANEL -->
+<div class="notif-panel" id="notif-panel">
+  <div class="notif-header">🔔 Thông báo</div>
+  <div class="notif-item">
+    <div class="notif-icon" style="background:#EBF0FA">✅</div>
+    <div>
+      <div class="notif-text"><b>Trip Request #TRV-0034</b> đã được Finance phê duyệt. Bạn có thể đặt vé ngay.</div>
+      <div class="notif-time">5 phút trước</div>
+    </div>
+  </div>
+  <div class="notif-item">
+    <div class="notif-icon" style="background:#FEF3CD">⚠️</div>
+    <div>
+      <div class="notif-text">Ngân sách tháng 5 của phòng BD đạt <b>80%</b>. Còn lại 12.4 triệu đồng.</div>
+      <div class="notif-time">1 giờ trước</div>
+    </div>
+  </div>
+  <div class="notif-item">
+    <div class="notif-icon" style="background:#EAFAF1">🧾</div>
+    <div>
+      <div class="notif-text">E-invoice #VAT-2026-0158 đã được tạo tự động và gửi đến kế toán.</div>
+      <div class="notif-time">2 giờ trước</div>
+    </div>
+  </div>
+  <div class="notif-item">
+    <div class="notif-icon" style="background:#FDEAEA">❌</div>
+    <div>
+      <div class="notif-text"><b>Trần Văn An</b> vừa gửi Trip Request mới cần phê duyệt.</div>
+      <div class="notif-time">3 giờ trước</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- #app-shell -->
+
+<!-- ═══════════════════════════
+     MODAL: TẠO TRIP REQUEST
+═══════════════════════════ -->
+<div class="modal-overlay" id="modal-trip">
+  <div class="modal">
+    <div class="modal-title">✈️ Tạo Trip Request</div>
+
+    <div class="steps">
+      <div class="step active" id="step1">
+        <div class="step-num">1</div>
+        <div class="step-label">Thông tin</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step inactive" id="step2">
+        <div class="step-num">2</div>
+        <div class="step-label">Dịch vụ</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step inactive" id="step3">
+        <div class="step-num">3</div>
+        <div class="step-label">Xác nhận</div>
+      </div>
+    </div>
+
+    <div id="trip-step-1">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Điểm đi</label>
+          <select class="form-control" id="trip-from">
+            <option>Hà Nội (HAN)</option>
+            <option>TP. Hồ Chí Minh (SGN)</option>
+            <option>Đà Nẵng (DAD)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Điểm đến</label>
+          <select class="form-control" id="trip-to">
+            <option>TP. Hồ Chí Minh (SGN)</option>
+            <option>Hà Nội (HAN)</option>
+            <option>Đà Nẵng (DAD)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Ngày đi</label>
+          <input type="date" class="form-control" value="2026-05-20" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ngày về</label>
+          <input type="date" class="form-control" value="2026-05-22" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mục đích chuyến đi</label>
+        <select class="form-control">
+          <option>Gặp khách hàng / Đối tác</option>
+          <option>Họp nội bộ / Team meeting</option>
+          <option>Hội thảo / Đào tạo</option>
+          <option>Triển khai dự án</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Dịch vụ cần đặt</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" checked/> ✈️ Vé máy bay</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" checked/> 🏨 Khách sạn</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" checked/> 🚖 Taxi</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox"/> 🚌 Xe khách</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox"/> 🚆 Tàu hỏa</label>
+        </div>
+      </div>
+      <div style="background:#EBF0FA;border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-top:4px">
+        <span style="font-size:20px">💰</span>
+        <div>
+          <div style="font-size:12px;color:var(--blue)">Ước tính chi phí</div>
+          <div style="font-size:16px;font-weight:800;color:var(--blue)">6.200.000đ</div>
+        </div>
+        <span class="badge badge-green" style="margin-left:auto">✓ Trong hạn mức</span>
+      </div>
+    </div>
+
+    <div id="trip-step-2" style="display:none">
+      <p style="font-size:13px;color:var(--gray3);margin-bottom:16px">Chọn dịch vụ ưa thích để Manager thấy ngay khi duyệt.</p>
+      <div class="flight-card selected">
+        <div>
+          <div class="flight-airline">VietJet Air VJ134</div>
+          <div class="flight-time">06:00 → 08:10</div>
+        </div>
+        <div class="flight-route">
+          <div style="font-size:11px;color:var(--gray3)">HAN ────── SGN</div>
+          <div class="flight-line"></div>
+          <div style="font-size:11px;color:var(--gray3)">2h10 • Bay thẳng</div>
+        </div>
+        <div class="flight-price">
+          <div class="price">1.850.000đ</div>
+          <span class="badge badge-green">✓ Trong policy</span>
+        </div>
+      </div>
+      <div class="flight-card">
+        <div>
+          <div class="flight-airline">Vietnam Airlines VN214</div>
+          <div class="flight-time">07:30 → 09:40</div>
+        </div>
+        <div class="flight-route">
+          <div style="font-size:11px;color:var(--gray3)">HAN ────── SGN</div>
+          <div class="flight-line"></div>
+          <div style="font-size:11px;color:var(--gray3)">2h10 • Bay thẳng</div>
+        </div>
+        <div class="flight-price">
+          <div class="price">2.450.000đ</div>
+          <span class="badge badge-yellow">⚠ Gần hạn mức</span>
+        </div>
+      </div>
+      <div class="flight-card">
+        <div>
+          <div class="flight-airline">Vietnam Airlines VN214 — Business</div>
+          <div class="flight-time">07:30 → 09:40</div>
+        </div>
+        <div class="flight-route">
+          <div style="font-size:11px;color:var(--gray3)">HAN ────── SGN</div>
+          <div class="flight-line"></div>
+          <div style="font-size:11px;color:var(--gray3)">2h10 • Bay thẳng</div>
+        </div>
+        <div class="flight-price">
+          <div class="price">4.800.000đ</div>
+          <span class="badge badge-red">✗ Vượt policy</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="trip-step-3" style="display:none">
+      <div style="text-align:center;padding:10px 0 20px">
+        <div style="font-size:48px;margin-bottom:12px">✅</div>
+        <div style="font-size:18px;font-weight:800;color:var(--green)">Trip Request đã gửi!</div>
+        <div style="font-size:13px;color:var(--gray3);margin-top:6px">Mã: <b style="color:var(--blue)">#TRV-0038</b></div>
+      </div>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-dot done"></div>
+          <div class="tl-title">Đã tạo yêu cầu</div>
+          <div class="tl-sub">14/05/2026 09:15 — Nguyễn Minh Tuấn</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot pending"></div>
+          <div class="tl-title">Chờ Manager duyệt</div>
+          <div class="tl-sub">Trần Thu Hà sẽ nhận notification ngay</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-title">Finance/Admin phê duyệt</div>
+          <div class="tl-sub">Sau khi Manager đồng ý</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-title">Đặt dịch vụ</div>
+          <div class="tl-sub">Sau khi được phê duyệt đủ 2 cấp</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-trip')" id="btn-modal-cancel">Hủy</button>
+      <button class="btn btn-primary" id="btn-modal-next" onclick="tripNext()">Tiếp theo →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL APPROVE -->
+<div class="modal-overlay" id="modal-approve">
+  <div class="modal" style="width:500px">
+    <div class="modal-title">✅ Phê duyệt Trip Request</div>
+    <div style="background:var(--gray1);border-radius:10px;padding:16px;margin-bottom:16px">
+      <div style="font-weight:700;color:var(--blue);margin-bottom:8px">#TRV-0035 — HAN → SGN</div>
+      <div style="font-size:13px;line-height:1.8;color:var(--text)">
+        👤 <b>Nguyễn Minh Tuấn</b> — Senior BD<br/>
+        📅 20/05 → 22/05/2026 (2 đêm)<br/>
+        🎯 Gặp khách hàng VCB tại TP.HCM<br/>
+        ✈️ VietJet 06:00 HAN–SGN — 1.850.000đ <span class="badge badge-green">✓ Policy</span><br/>
+        🏨 Pullman Saigon 2 đêm — 1.800.000đ <span class="badge badge-green">✓ Policy</span><br/>
+        🚖 Taxi sân bay × 2 — 280.000đ <span class="badge badge-green">✓ Policy</span>
+      </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--gray2);display:flex;justify-content:space-between">
+        <span style="font-size:13px;color:var(--gray3)">Tổng ước tính:</span>
+        <span style="font-size:16px;font-weight:800;color:var(--blue)">3.930.000đ</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ghi chú (tùy chọn)</label>
+      <textarea class="form-control" rows="2" placeholder="Thêm ghi chú cho nhân viên..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-approve')">Đóng</button>
+      <button class="btn btn-red btn-sm" onclick="doReject()">✗ Từ chối</button>
+      <button class="btn btn-green" onclick="doApprove()">✓ Phê duyệt</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════
+const ROLES = {
+  employee: {
+    name: 'Nguyễn Minh Tuấn', initials:'NT', role:'Senior BD Executive',
+    nav:[
+      {id:'home',   icon:'🏠', label:'Tổng quan'},
+      {id:'trips',  icon:'✈️', label:'Chuyến đi của tôi'},
+      {id:'book',   icon:'📋', label:'Đặt dịch vụ'},
+      {id:'invoice',icon:'🧾', label:'Hóa đơn'},
+    ]
+  },
+  manager: {
+    name:'Trần Thu Hà', initials:'TH', role:'BD Manager',
+    nav:[
+      {id:'home',    icon:'🏠', label:'Tổng quan'},
+      {id:'approve', icon:'✅', label:'Phê duyệt', badge:3},
+      {id:'team',    icon:'👥', label:'Chi phí Team'},
+      {id:'trips',   icon:'✈️', label:'Lịch sử duyệt'},
+    ]
+  },
+  finance: {
+    name:'Lê Quang Hùng', initials:'LH', role:'Finance Manager',
+    nav:[
+      {id:'home',    icon:'🏠', label:'Tổng quan'},
+      {id:'approve', icon:'✅', label:'Phê duyệt cấp 2', badge:2},
+      {id:'policy',  icon:'⚙️', label:'Cấu hình Policy'},
+      {id:'dashboard',icon:'📊', label:'Dashboard Chi phí'},
+      {id:'invoice', icon:'🧾', label:'Hóa đơn'},
+      {id:'report',  icon:'📤', label:'Xuất báo cáo'},
+    ]
+  },
+  accountant: {
+    name:'Nguyễn Thu Lan', initials:'NL', role:'Kế toán',
+    nav:[
+      {id:'home',    icon:'🏠', label:'Tổng quan'},
+      {id:'invoice', icon:'🧾', label:'Danh sách hóa đơn'},
+      {id:'reconcile',icon:'🔍',label:'Đối soát'},
+      {id:'report',  icon:'📤', label:'Xuất báo cáo'},
+    ]
+  }
+};
+
+let currentRole = 'employee';
+let currentPage = 'home';
+let tripStep = 1;
+
+// ══════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════
+function loginSSO(){ loginAs('employee'); }
+
+function loginAs(role){
+  currentRole = role;
+  document.getElementById('page-login').style.display = 'none';
+  document.getElementById('app-shell').style.display = 'flex';
+  document.getElementById('app-shell').style.flexDirection = 'row';
+
+  const u = ROLES[role];
+  document.getElementById('sb-avatar').textContent = u.initials;
+  document.getElementById('sb-uname').textContent  = u.name;
+  document.getElementById('sb-urole').textContent  = u.role;
+  document.getElementById('topbar-date').textContent = '14/05/2026';
+
+  renderNav(role);
+  navigate('home');
+
+  // highlight active role btn
+  document.querySelectorAll('.sb-role-btn').forEach(b=>b.classList.remove('active'));
+}
+
+// ══════════════════════════════════════
+//  NAV
+// ══════════════════════════════════════
+function renderNav(role){
+  const nav = document.getElementById('sb-nav');
+  nav.innerHTML = '';
+  ROLES[role].nav.forEach(item=>{
+    const d = document.createElement('div');
+    d.className='sb-item';
+    d.id='nav-'+item.id;
+    d.onclick=()=>navigate(item.id);
+    d.innerHTML = `<span class="ic">${item.icon}</span><span>${item.label}</span>${item.badge?`<span class="sb-badge">${item.badge}</span>`:''}`;
+    nav.appendChild(d);
+  });
+}
+
+function navigate(page){
+  currentPage = page;
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  const el = document.getElementById('nav-'+page);
+  if(el) el.classList.add('active');
+
+  const titles = {
+    home:'Tổng quan', trips:'Chuyến đi của tôi', book:'Đặt dịch vụ',
+    invoice:'Hóa đơn', approve:'Phê duyệt', team:'Chi phí Team',
+    policy:'Cấu hình Policy', dashboard:'Dashboard Chi phí',
+    report:'Xuất báo cáo', reconcile:'Đối soát hóa đơn'
+  };
+  document.getElementById('topbar-title').textContent = titles[page] || page;
+
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  const renders = {
+    home:      renderHome,
+    trips:     renderTrips,
+    book:      renderBook,
+    invoice:   renderInvoice,
+    approve:   renderApprove,
+    team:      renderTeam,
+    policy:    renderPolicy,
+    dashboard: renderDashboard,
+    report:    renderReport,
+    reconcile: renderReconcile,
+  };
+  if(renders[page]) renders[page](content);
+}
+
+// ══════════════════════════════════════
+//  HOME (per-role)
+// ══════════════════════════════════════
+function renderHome(c){
+  if(currentRole==='employee') renderHomeEmployee(c);
+  else if(currentRole==='manager') renderHomeManager(c);
+  else if(currentRole==='finance') renderHomeFinance(c);
+  else renderHomeAccountant(c);
+}
+
+function renderHomeEmployee(c){
+  c.innerHTML = `
+  <div class="grid-4" style="margin-bottom:20px">
+    <div class="budget-widget" style="grid-column:span 1">
+      <div class="bw-label">Hạn mức còn lại tháng 5</div>
+      <div class="bw-val">4.200.000đ</div>
+      <div class="bw-total">/ 8.000.000đ tổng</div>
+      <div class="bw-bar"><div class="bw-fill" style="width:47%"></div></div>
+      <div class="bw-pct">Đã dùng 47% • Còn 53%</div>
+    </div>
+    <div class="kpi"><div class="kpi-icon blue">✈️</div><div><div class="kpi-label">Chuyến đi tháng này</div><div class="kpi-val">3</div><div class="kpi-sub">+1 so với tháng trước</div></div></div>
+    <div class="kpi"><div class="kpi-icon green">✅</div><div><div class="kpi-label">Đã hoàn thành</div><div class="kpi-val">2</div><div class="kpi-sub up">100% trong hạn mức</div></div></div>
+    <div class="kpi"><div class="kpi-icon orange">⏳</div><div><div class="kpi-label">Đang chờ duyệt</div><div class="kpi-val">1</div><div class="kpi-sub">Pending Finance</div></div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">📋 Chuyến đi gần đây</div>
+      <table class="tbl">
+        <thead><tr><th>Trip</th><th>Tuyến</th><th>Chi phí</th><th>Trạng thái</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>#TRV-0035</b><br/><span style="font-size:11px;color:var(--gray3)">20–22/05</span></td>
+            <td>HAN → SGN</td>
+            <td>3.930.000đ</td>
+            <td><span class="badge badge-yellow">⏳ Pending Finance</span></td>
+          </tr>
+          <tr>
+            <td><b>#TRV-0028</b><br/><span style="font-size:11px;color:var(--gray3)">08–09/05</span></td>
+            <td>HAN → DAD</td>
+            <td>2.750.000đ</td>
+            <td><span class="badge badge-green">✓ Hoàn thành</span></td>
+          </tr>
+          <tr>
+            <td><b>#TRV-0021</b><br/><span style="font-size:11px;color:var(--gray3)">02/05</span></td>
+            <td>HAN → SGN</td>
+            <td>1.850.000đ</td>
+            <td><span class="badge badge-green">✓ Hoàn thành</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">🧾 Hóa đơn mới nhất</div>
+      <table class="tbl">
+        <thead><tr><th>Số HĐ</th><th>Dịch vụ</th><th>Giá trị</th><th>Trạng thái</th></tr></thead>
+        <tbody>
+          <tr><td>#VAT-0158</td><td>✈️ Vé VJ134</td><td>1.850.000đ</td><td><span class="badge badge-green">✓ Đã xuất</span></td></tr>
+          <tr><td>#VAT-0157</td><td>🏨 Pullman SGN</td><td>1.800.000đ</td><td><span class="badge badge-green">✓ Đã xuất</span></td></tr>
+          <tr><td>#VAT-0142</td><td>✈️ Vé VJ210</td><td>1.250.000đ</td><td><span class="badge badge-green">✓ Đã xuất</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  `;
+}
+
+function renderHomeManager(c){
+  c.innerHTML = `
+  <div class="grid-4" style="margin-bottom:20px">
+    <div class="kpi"><div class="kpi-icon orange">⏳</div><div><div class="kpi-label">Chờ tôi duyệt</div><div class="kpi-val" style="color:var(--orange)">3</div><div class="kpi-sub dn">Cần action trong hôm nay</div></div></div>
+    <div class="kpi"><div class="kpi-icon blue">👥</div><div><div class="kpi-label">Nhân viên trong team</div><div class="kpi-val">8</div><div class="kpi-sub">5 đã đi công tác tháng này</div></div></div>
+    <div class="kpi"><div class="kpi-icon red">💸</div><div><div class="kpi-label">Chi phí team tháng 5</div><div class="kpi-val">48.2M</div><div class="kpi-sub dn">↑ 12% vs tháng 4</div></div></div>
+    <div class="kpi"><div class="kpi-icon green">✅</div><div><div class="kpi-label">Tuân thủ policy</div><div class="kpi-val">94%</div><div class="kpi-sub up">↑ 4% vs tháng 4</div></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">⚡ Cần phê duyệt ngay</div>
+      ${approvalCardHTML('TRV-0038','Nguyễn Minh Tuấn','NT','HAN → SGN • 20–22/05','3.930.000đ','badge-green','✓ Trong hạn mức','Pending Manager','2 phút trước')}
+      ${approvalCardHTML('TRV-0037','Phạm Khánh Linh','PL','HAN → DAD • 18–19/05','2.100.000đ','badge-green','✓ Trong hạn mức','Pending Manager','1 giờ trước')}
+      ${approvalCardHTML('TRV-0036','Trần Văn An','TA','HAN → SGN • 17/05','5.800.000đ','badge-red','✗ Vượt hạn mức','Pending Manager','3 giờ trước')}
+    </div>
+    <div class="card">
+      <div class="card-title">📊 Chi phí team theo tháng</div>
+      <div class="chart-bars">
+        ${barHTML('T1','12M',30,'var(--blue)')}
+        ${barHTML('T2','18M',45,'var(--blue)')}
+        ${barHTML('T3','22M',55,'var(--blue)')}
+        ${barHTML('T4','43M',85,'var(--orange)')}
+        ${barHTML('T5','48M',96,'var(--red)')}
+      </div>
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--gray2);display:flex;justify-content:space-between;font-size:13px">
+        <span style="color:var(--gray3)">Ngân sách tháng 5</span>
+        <span style="font-weight:700;color:var(--blue)">50.000.000đ</span>
+      </div>
+      <div style="margin-top:6px">
+        <div class="budget-bar-wrap"><div class="budget-bar" style="width:96%;background:var(--red)"></div></div>
+        <div style="font-size:11px;color:var(--red);margin-top:4px;font-weight:600">⚠️ Đã dùng 96% ngân sách tháng 5</div>
+      </div>
+    </div>
+  </div>
+  `;
+}
+
+function renderHomeFinance(c){
+  c.innerHTML = `
+  <div class="grid-4" style="margin-bottom:20px">
+    <div class="kpi"><div class="kpi-icon orange">⏳</div><div><div class="kpi-label">Chờ Finance duyệt</div><div class="kpi-val" style="color:var(--orange)">2</div><div class="kpi-sub">Đã qua Manager</div></div></div>
+    <div class="kpi"><div class="kpi-icon red">💸</div><div><div class="kpi-label">T&E tháng 5 toàn công ty</div><div class="kpi-val">284M</div><div class="kpi-sub dn">↑ 8% vs tháng 4</div></div></div>
+    <div class="kpi"><div class="kpi-icon green">🧾</div><div><div class="kpi-label">E-invoice đã tạo</div><div class="kpi-val">158</div><div class="kpi-sub up">100% tự động</div></div></div>
+    <div class="kpi"><div class="kpi-icon blue">📋</div><div><div class="kpi-label">Vi phạm policy</div><div class="kpi-val">6</div><div class="kpi-sub dn">3 đã được duyệt ngoại lệ</div></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">📊 Chi phí theo phòng ban (tháng 5)</div>
+      <table class="tbl">
+        <thead><tr><th>Phòng ban</th><th>Chi phí</th><th>Ngân sách</th><th>Sử dụng</th></tr></thead>
+        <tbody>
+          <tr><td><b>BD HCM</b></td><td>48.2M</td><td>50M</td><td><div class="budget-bar-wrap"><div class="budget-bar" style="width:96%;background:var(--red)"></div></div><span style="font-size:11px;color:var(--red)">96%</span></td></tr>
+          <tr><td><b>Tech</b></td><td>62.5M</td><td>80M</td><td><div class="budget-bar-wrap"><div class="budget-bar" style="width:78%;background:var(--orange)"></div></div><span style="font-size:11px;color:var(--orange)">78%</span></td></tr>
+          <tr><td><b>Sales HN</b></td><td>38.1M</td><td>60M</td><td><div class="budget-bar-wrap"><div class="budget-bar" style="width:64%;background:var(--green)"></div></div><span style="font-size:11px;color:var(--green)">64%</span></td></tr>
+          <tr><td><b>Marketing</b></td><td>22.3M</td><td>40M</td><td><div class="budget-bar-wrap"><div class="budget-bar" style="width:56%;background:var(--green)"></div></div><span style="font-size:11px;color:var(--green)">56%</span></td></tr>
+          <tr><td><b>Product</b></td><td>51.8M</td><td>70M</td><td><div class="budget-bar-wrap"><div class="budget-bar" style="width:74%;background:var(--orange)"></div></div><span style="font-size:11px;color:var(--orange)">74%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">⚡ Cần phê duyệt (cấp 2)</div>
+      ${approvalCardHTML('TRV-0033','Lê Minh Khoa','LK','SGN → HAN • 16–17/05','4.200.000đ','badge-green','✓ Trong hạn mức','Pending Finance','30 phút trước')}
+      ${approvalCardHTML('TRV-0031','Ngô Thị Bích','NB','HAN → DAD • 15/05','7.500.000đ','badge-red','⚠ Exception Request','Pending Finance','2 giờ trước')}
+    </div>
+  </div>`;
+}
+
+function renderHomeAccountant(c){
+  c.innerHTML = `
+  <div class="grid-4" style="margin-bottom:20px">
+    <div class="kpi"><div class="kpi-icon green">🧾</div><div><div class="kpi-label">Hóa đơn tháng 5</div><div class="kpi-val">158</div><div class="kpi-sub up">100% tự động</div></div></div>
+    <div class="kpi"><div class="kpi-icon blue">✅</div><div><div class="kpi-label">Đã đối soát</div><div class="kpi-val">152</div><div class="kpi-sub up">96% auto-matched</div></div></div>
+    <div class="kpi"><div class="kpi-icon orange">⚠️</div><div><div class="kpi-label">Cần xem xét</div><div class="kpi-val">6</div><div class="kpi-sub">Chênh lệch nhỏ</div></div></div>
+    <div class="kpi"><div class="kpi-icon red">💰</div><div><div class="kpi-label">Tổng giá trị HĐ</div><div class="kpi-val">284M</div><div class="kpi-sub up">↓ 80% thời gian đối soát</div></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">🧾 Hóa đơn gần nhất</div>
+    ${invoiceTableHTML()}
+  </div>`;
+}
+
+// ══════════════════════════════════════
+//  TRIPS
+// ══════════════════════════════════════
+function renderTrips(c){
+  c.innerHTML = `
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <input class="form-control" style="width:200px" placeholder="🔍 Tìm chuyến đi..." />
+      <select class="form-control" style="width:160px"><option>Tất cả trạng thái</option><option>Approved</option><option>Pending</option><option>Rejected</option></select>
+      <select class="form-control" style="width:140px"><option>Tháng 5/2026</option><option>Tháng 4/2026</option></select>
+      <button class="btn btn-primary btn-sm" onclick="showModal('modal-trip')">+ Tạo mới</button>
+    </div>
+  </div>
+  <div class="card">
+    <table class="tbl">
+      <thead><tr><th>Mã</th><th>Tuyến</th><th>Ngày đi</th><th>Dịch vụ</th><th>Chi phí</th><th>Trạng thái</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b style="color:var(--blue)">#TRV-0035</b></td>
+          <td>HAN → SGN</td><td>20/05 → 22/05</td>
+          <td>✈️🏨🚖</td>
+          <td><b>3.930.000đ</b></td>
+          <td><span class="badge badge-yellow">⏳ Pending Finance</span></td>
+          <td><button class="btn btn-ghost btn-sm">Xem chi tiết</button></td>
+        </tr>
+        <tr>
+          <td><b style="color:var(--blue)">#TRV-0028</b></td>
+          <td>HAN → DAD</td><td>08/05 → 09/05</td>
+          <td>✈️🏨</td>
+          <td><b>2.750.000đ</b></td>
+          <td><span class="badge badge-green">✓ Completed</span></td>
+          <td><button class="btn btn-ghost btn-sm">Xem hóa đơn</button></td>
+        </tr>
+        <tr>
+          <td><b style="color:var(--blue)">#TRV-0021</b></td>
+          <td>HAN → SGN</td><td>02/05</td>
+          <td>✈️🚖</td>
+          <td><b>1.850.000đ</b></td>
+          <td><span class="badge badge-green">✓ Completed</span></td>
+          <td><button class="btn btn-ghost btn-sm">Xem hóa đơn</button></td>
+        </tr>
+        <tr>
+          <td><b style="color:var(--blue)">#TRV-0014</b></td>
+          <td>HAN → HCM</td><td>15/04</td>
+          <td>✈️🏨🚖</td>
+          <td><b>5.200.000đ</b></td>
+          <td><span class="badge badge-red">✗ Rejected</span></td>
+          <td><button class="btn btn-ghost btn-sm">Tạo lại</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>`;
+}
+
+// ══════════════════════════════════════
+//  BOOK (Đặt dịch vụ)
+// ══════════════════════════════════════
+function renderBook(c){
+  c.innerHTML = `
+  <div style="background:linear-gradient(135deg,var(--blue),#0052CC);border-radius:var(--radius);padding:24px;color:#fff;margin-bottom:20px">
+    <div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:4px">Trip đã phê duyệt: <b>#TRV-0028</b></div>
+    <div style="font-size:20px;font-weight:800;margin-bottom:4px">✈️ Hà Nội → Đà Nẵng</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.8)">08/05 → 09/05/2026 • Gặp đối tác FPT Đà Nẵng</div>
+    <div style="margin-top:14px;background:rgba(255,255,255,.15);border-radius:8px;padding:10px 14px;display:inline-block">
+      💰 Hạn mức còn lại: <b>4.200.000đ</b> / 8.000.000đ
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <button class="btn btn-primary btn-sm">✈️ Vé máy bay</button>
+    <button class="btn btn-ghost btn-sm">🏨 Khách sạn</button>
+    <button class="btn btn-ghost btn-sm">🚖 Taxi</button>
+    <button class="btn btn-ghost btn-sm">🚌 Xe khách</button>
+    <button class="btn btn-ghost btn-sm">🚆 Tàu hỏa</button>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">✈️ Chọn chuyến bay HAN → DAD</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <select class="form-control" style="width:auto"><option>Economy</option><option>Business</option></select>
+        <select class="form-control" style="width:auto"><option>Sắp xếp: Giá thấp nhất</option><option>Giờ khởi hành sớm nhất</option></select>
+      </div>
+
+      <div class="flight-card selected" onclick="selectFlight(this)">
+        <div><div class="flight-airline">VietJet Air VJ532</div><div class="flight-time">06:10 → 08:00</div></div>
+        <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h50</div></div>
+        <div class="flight-price"><div class="price">1.250.000đ</div><span class="badge badge-green">✓ Policy</span></div>
+      </div>
+
+      <div class="flight-card" onclick="selectFlight(this)">
+        <div><div class="flight-airline">Vietnam Airlines VN1540</div><div class="flight-time">08:30 → 10:25</div></div>
+        <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h55</div></div>
+        <div class="flight-price"><div class="price">1.890.000đ</div><span class="badge badge-yellow">⚠ Gần hạn mức</span></div>
+      </div>
+
+      <div class="flight-card" onclick="selectFlight(this)">
+        <div><div class="flight-airline">Bamboo Airways QH102</div><div class="flight-time">10:00 → 11:50</div></div>
+        <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h50</div></div>
+        <div class="flight-price"><div class="price">1.680.000đ</div><span class="badge badge-green">✓ Policy</span></div>
+      </div>
+
+      <div class="flight-card" onclick="selectFlight(this)" style="opacity:.7">
+        <div><div class="flight-airline">Vietnam Airlines VN1540 — Business</div><div class="flight-time">08:30 → 10:25</div></div>
+        <div class="flight-route"><div style="font-size:11px;color:var(--gray3)">HAN ─── DAD</div><div class="flight-line"></div><div style="font-size:11px;color:var(--gray3)">1h55</div></div>
+        <div class="flight-price"><div class="price">4.500.000đ</div><span class="badge badge-red">✗ Vượt policy</span></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">🛒 Giỏ dịch vụ đã chọn</div>
+        <div style="border-bottom:1px solid var(--gray2);padding-bottom:10px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:13px">✈️ VietJet VJ532 (06:10)</span><span style="font-weight:700">1.250.000đ</span>
+          </div>
+          <div style="font-size:11px;color:var(--gray3)">HAN → DAD • Economy • 08/05/2026</div>
+        </div>
+        <div style="border-bottom:1px solid var(--gray2);padding-bottom:10px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:13px">🏨 Mường Thanh Da Nang (1 đêm)</span><span style="font-weight:700">850.000đ</span>
+          </div>
+          <div style="font-size:11px;color:var(--gray3)">08/05 → 09/05 • Standard Room</div>
+        </div>
+        <div style="border-bottom:1px solid var(--gray2);padding-bottom:10px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:13px">🚖 XanhSM (Sân bay → KS)</span><span style="font-weight:700">150.000đ</span>
+          </div>
+          <div style="font-size:11px;color:var(--gray3)">Đón tại T2 Đà Nẵng</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;margin-bottom:14px">
+          <span>Tổng cộng</span><span style="color:var(--blue)">2.250.000đ</span>
+        </div>
+        <div style="background:#EAFAF1;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--green);margin-bottom:14px">
+          ✓ Tất cả trong hạn mức • Thanh toán bằng Virtual Credit công ty
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doBook()">
+          🔐 Xác nhận đặt & Thanh toán
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-title">📍 Lịch trình chuyến đi</div>
+        <div class="timeline">
+          <div class="tl-item"><div class="tl-dot done"></div><div class="tl-title">06:10 — Bay HAN → DAD</div><div class="tl-sub">VietJet VJ532 • T1 Nội Bài</div></div>
+          <div class="tl-item"><div class="tl-dot done"></div><div class="tl-title">08:00 — Đến Đà Nẵng</div><div class="tl-sub">T2 Đà Nẵng</div></div>
+          <div class="tl-item"><div class="tl-dot pending"></div><div class="tl-title">08:30 — Taxi đến khách sạn</div><div class="tl-sub">XanhSM • Mường Thanh (~20p)</div></div>
+          <div class="tl-item"><div class="tl-dot"></div><div class="tl-title">09:30 → 17:00 — Họp FPT</div><div class="tl-sub">FPT Tower Da Nang, P.Hai Chau</div></div>
+          <div class="tl-item"><div class="tl-dot"></div><div class="tl-title">09/05 — Bay về HAN</div><div class="tl-sub">VietJet VJ531 • 10:20</div></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════
+//  APPROVE
+// ══════════════════════════════════════
+function renderApprove(c){
+  const isFinance = currentRole === 'finance';
+  c.innerHTML = `
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:13px;color:var(--gray3)">
+        ${isFinance ? '2 yêu cầu chờ Finance phê duyệt (đã qua Manager)' : '3 yêu cầu chờ bạn phê duyệt'}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm">Phê duyệt tất cả ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="approve-list">
+  ${isFinance ? `
+    ${fullApproveCard('TRV-0033','Lê Minh Khoa','LK','SGN → HAN','16–17/05/2026','Gặp đối tác BIDV Hà Nội','4.200.000đ','badge-green','✓ Trong hạn mức','2 giờ trước','Manager: Nguyễn Dũng đã duyệt 09:30 14/05')}
+    ${fullApproveCard('TRV-0031','Ngô Thị Bích','NB','HAN → SGN','15/05/2026','Hội thảo Fintech Vietnam 2026','7.500.000đ','badge-red','⚠️ Exception: Vượt hạn mức 25%','4 giờ trước','Lý do: Chi phí hội thảo bất thường, có xác nhận từ Dir.')}
+  ` : `
+    ${fullApproveCard('TRV-0038','Nguyễn Minh Tuấn','NT','HAN → SGN','20–22/05/2026','Gặp khách hàng VCB tại TP.HCM','3.930.000đ','badge-green','✓ Trong hạn mức','2 phút trước','')}
+    ${fullApproveCard('TRV-0037','Phạm Khánh Linh','PL','HAN → DAD','18–19/05/2026','Triển khai VNPAY QR tại Đà Nẵng','2.100.000đ','badge-green','✓ Trong hạn mức','1 giờ trước','')}
+    ${fullApproveCard('TRV-0036','Trần Văn An','TA','HAN → SGN','17/05/2026','Demo sản phẩm cho MSB','5.800.000đ','badge-red','✗ Vượt hạn mức (Senior: tối đa 5M)','3 giờ trước','')}
+  `}
+  </div>`;
+}
+
+function fullApproveCard(id,name,initials,route,dates,purpose,cost,badgeClass,badgeText,time,note){
+  return `
+  <div class="appr-card" id="card-${id}">
+    <div class="appr-head">
+      <div class="appr-avatar">${initials}</div>
+      <div style="flex:1">
+        <div class="appr-name">${name} — <span style="font-weight:400;color:var(--gray3)">Trip #${id}</span></div>
+        <div class="appr-sub">${route} • ${dates}</div>
+      </div>
+      <span class="badge ${badgeClass}">${badgeText}</span>
+    </div>
+    <div class="appr-body">
+      🎯 <b>Mục đích:</b> ${purpose}<br/>
+      ✈️ Vé máy bay + 🏨 Khách sạn + 🚖 Taxi<br/>
+      ${note ? `<span style="color:var(--gray3);font-size:12px">📝 ${note}</span>` : ''}
+    </div>
+    <div class="appr-meta">
+      <span>💰 ${cost}</span>
+      <span>🕐 ${time}</span>
+    </div>
+    <div class="appr-actions">
+      <button class="btn btn-ghost btn-sm">👁 Xem chi tiết</button>
+      <button class="btn btn-red btn-sm" onclick="quickReject('${id}')">✗ Từ chối</button>
+      <button class="btn btn-green btn-sm" onclick="quickApprove('${id}')">✓ Phê duyệt</button>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════
+//  TEAM
+// ══════════════════════════════════════
+function renderTeam(c){
+  c.innerHTML = `
+  <div class="card">
+    <div class="card-title">👥 Chi phí nhân viên tháng 5</div>
+    <table class="tbl">
+      <thead><tr><th>Nhân viên</th><th>Cấp bậc</th><th>Chuyến đi</th><th>Chi phí</th><th>Hạn mức</th><th>Sử dụng</th><th>Trạng thái</th></tr></thead>
+      <tbody>
+        <tr><td><b>Nguyễn Minh Tuấn</b></td><td>Senior</td><td>3</td><td>6.530.000đ</td><td>8.000.000đ</td><td><div class="budget-bar-wrap"><div class="budget-bar" style="width:82%;background:var(--orange)"></div></div>82%</td><td><span class="badge badge-yellow">⚠ Đang cao</span></td></tr>
+        <tr><td><b>Phạm Khánh Linh</b></td><td>Staff</td><td>2</td><td>3.200.000đ</td><td>5.000.000đ</td><td><div class="budget-bar-wrap"><div class="budget-bar" style="width:64%;background:var(--green)"></div></div>64%</td><td><span class="badge badge-green">✓ Bình thường</span></td></tr>
+        <tr><td><b>Trần Văn An</b></td><td>Senior</td><td>4</td><td>7.800.000đ</td><td>8.000.000đ</td><td><div class="budget-bar-wrap"><div class="budget-bar" style="width:98%;background:var(--red)"></div></div>98%</td><td><span class="badge badge-red">✗ Gần cạn</span></td></tr>
+        <tr><td><b>Hoàng Thị Mai</b></td><td>Staff</td><td>1</td><td>1.250.000đ</td><td>5.000.000đ</td><td><div class="budget-bar-wrap"><div class="budget-bar" style="width:25%;background:var(--green)"></div></div>25%</td><td><span class="badge badge-green">✓ Bình thường</span></td></tr>
+        <tr><td><b>Lý Văn Sơn</b></td><td>Executive</td><td>2</td><td>4.100.000đ</td><td>5.000.000đ</td><td><div class="budget-bar-wrap"><div class="budget-bar" style="width:82%;background:var(--orange)"></div></div>82%</td><td><span class="badge badge-yellow">⚠ Đang cao</span></td></tr>
+      </tbody>
+    </table>
+  </div>`;
+}
+
+// ══════════════════════════════════════
+//  POLICY
+// ══════════════════════════════════════
+function renderPolicy(c){
+  c.innerHTML = `
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">⚙️ Hạn mức chi tiêu theo cấp bậc</div>
+    <table class="tbl">
+      <thead><tr><th>Loại dịch vụ</th><th>Staff</th><th>Senior</th><th>Manager</th><th>Director+</th></tr></thead>
+      <tbody>
+        <tr><td>✈️ Vé máy bay nội địa (1 chiều)</td><td><input class="form-control" style="width:120px" value="2.500.000đ"/></td><td><input class="form-control" style="width:120px" value="3.000.000đ"/></td><td><input class="form-control" style="width:120px" value="5.000.000đ"/></td><td>Không giới hạn</td></tr>
+        <tr><td>✈️ Vé quốc tế (1 chiều)</td><td><input class="form-control" style="width:120px" value="8.000.000đ"/></td><td><input class="form-control" style="width:120px" value="10.000.000đ"/></td><td><input class="form-control" style="width:120px" value="15.000.000đ"/></td><td>Business</td></tr>
+        <tr><td>🏨 Khách sạn nội địa (1 đêm)</td><td><input class="form-control" style="width:120px" value="700.000đ"/></td><td><input class="form-control" style="width:120px" value="900.000đ"/></td><td><input class="form-control" style="width:120px" value="1.500.000đ"/></td><td><input class="form-control" style="width:120px" value="3.000.000đ"/></td></tr>
+        <tr><td>🚖 Taxi/xe công nghệ</td><td><input class="form-control" style="width:120px" value="200.000đ"/></td><td><input class="form-control" style="width:120px" value="200.000đ"/></td><td><input class="form-control" style="width:120px" value="300.000đ"/></td><td><input class="form-control" style="width:120px" value="500.000đ"/></td></tr>
+        <tr><td>🚌 Xe khách liên tỉnh</td><td><input class="form-control" style="width:120px" value="300.000đ"/></td><td><input class="form-control" style="width:120px" value="300.000đ"/></td><td><input class="form-control" style="width:120px" value="500.000đ"/></td><td>Không giới hạn</td></tr>
+        <tr><td>💰 Hạn mức tổng/chuyến</td><td><input class="form-control" style="width:120px" value="5.000.000đ"/></td><td><input class="form-control" style="width:120px" value="8.000.000đ"/></td><td><input class="form-control" style="width:120px" value="20.000.000đ"/></td><td>Không giới hạn</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:16px;display:flex;gap:10px">
+      <button class="btn btn-primary">💾 Lưu cấu hình</button>
+      <button class="btn btn-ghost">↺ Khôi phục mặc định</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">🤖 Quy tắc tự động Policy Engine</div>
+    <table class="tbl">
+      <thead><tr><th>Điều kiện</th><th>Hành động</th><th>Thông báo đến</th></tr></thead>
+      <tbody>
+        <tr><td>Dịch vụ ≤ hạn mức cấp bậc</td><td><span class="badge badge-green">✓ Cho phép đặt ngay</span></td><td>Nhân viên</td></tr>
+        <tr><td>Vượt hạn mức nhưng &lt; 150%</td><td><span class="badge badge-yellow">⚠ Yêu cầu lý do + Exception</span></td><td>Finance/Admin</td></tr>
+        <tr><td>Vượt hạn mức &gt; 150%</td><td><span class="badge badge-red">✗ Block — không cho đặt</span></td><td>Manager</td></tr>
+        <tr><td>Budget phòng ban đạt 80%</td><td><span class="badge badge-yellow">⚠ Cảnh báo — vẫn cho đặt</span></td><td>Finance + Manager</td></tr>
+        <tr><td>Budget phòng ban đạt 100%</td><td><span class="badge badge-red">✗ Block toàn bộ booking</span></td><td>Finance + Dept Head</td></tr>
+        <tr><td>Approval &gt; 24h chưa action</td><td><span class="badge badge-blue">↑ Escalate lên cấp trên</span></td><td>Manager của Manager</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+}
+
+// ══════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════
+function renderDashboard(c){
+  c.innerHTML = `
+  <div class="grid-4" style="margin-bottom:20px">
+    <div class="kpi"><div class="kpi-icon red">💸</div><div><div class="kpi-label">T&E tháng 5</div><div class="kpi-val">284M</div><div class="kpi-sub dn">↑ 8% vs T4</div></div></div>
+    <div class="kpi"><div class="kpi-icon blue">📋</div><div><div class="kpi-label">Trip Requests</div><div class="kpi-val">63</div><div class="kpi-sub">52 approved</div></div></div>
+    <div class="kpi"><div class="kpi-icon green">✅</div><div><div class="kpi-label">Policy Compliance</div><div class="kpi-val">94%</div><div class="kpi-sub up">↑ 4% vs T4</div></div></div>
+    <div class="kpi"><div class="kpi-icon orange">⏱</div><div><div class="kpi-label">Thời gian duyệt TB</div><div class="kpi-val">2.8h</div><div class="kpi-sub up">↓ từ 2–3 ngày</div></div></div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="card">
+      <div class="card-title">📊 T&E theo phòng ban (tháng 5)</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${deptBar('BD HCM','48.2M',96,'var(--red)')}
+        ${deptBar('Tech','62.5M',78,'var(--orange)')}
+        ${deptBar('Sales HN','38.1M',64,'var(--green)')}
+        ${deptBar('Marketing','22.3M',56,'var(--green)')}
+        ${deptBar('Product','51.8M',74,'var(--orange)')}
+        ${deptBar('Finance','18.6M',37,'var(--green)')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🥧 Chi phí theo loại dịch vụ</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+        ${serviceRow('✈️ Vé máy bay','148.2M',52,'var(--blue)')}
+        ${serviceRow('🏨 Khách sạn','82.4M',29,'var(--lblue)')}
+        ${serviceRow('🚖 Taxi/xe','28.6M',10,'var(--orange)')}
+        ${serviceRow('🚌 Xe khách','14.8M',5,'var(--gray3)')}
+        ${serviceRow('🚆 Tàu hỏa','10.0M',4,'var(--green)')}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Vi phạm policy gần nhất</div>
+    <table class="tbl">
+      <thead><tr><th>Nhân viên</th><th>Phòng ban</th><th>Loại vi phạm</th><th>Giá trị</th><th>Kết quả</th><th>Thời gian</th></tr></thead>
+      <tbody>
+        <tr><td>Trần Văn An</td><td>BD HCM</td><td>Vé Business Class (Senior)</td><td>4.800.000đ</td><td><span class="badge badge-red">✗ Rejected</span></td><td>14/05</td></tr>
+        <tr><td>Ngô Thị Bích</td><td>Product</td><td>Tổng chuyến vượt 25%</td><td>7.500.000đ</td><td><span class="badge badge-yellow">⏳ Exception Review</span></td><td>14/05</td></tr>
+        <tr><td>Lý Văn Sơn</td><td>Sales HN</td><td>Khách sạn 5 sao (Staff)</td><td>2.800.000đ</td><td><span class="badge badge-green">✓ Approved Exception</span></td><td>12/05</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+}
+
+// ══════════════════════════════════════
+//  INVOICE
+// ══════════════════════════════════════
+function renderInvoice(c){
+  c.innerHTML = `
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <select class="form-control" style="width:160px"><option>Tháng 5/2026</option><option>Tháng 4/2026</option></select>
+      <select class="form-control" style="width:160px"><option>Tất cả phòng ban</option><option>BD HCM</option><option>Tech</option></select>
+      <select class="form-control" style="width:160px"><option>Tất cả dịch vụ</option><option>Vé máy bay</option><option>Khách sạn</option></select>
+      <button class="btn btn-primary btn-sm">🔍 Lọc</button>
+      <button class="btn btn-outline btn-sm" style="margin-left:auto">📥 Export Excel</button>
+    </div>
+  </div>
+  <div class="card">${invoiceTableHTML()}</div>`;
+}
+
+function invoiceTableHTML(){
+  return `<table class="tbl">
+    <thead><tr><th>Số HĐ</th><th>Nhân viên</th><th>Dịch vụ</th><th>Giá trị</th><th>VAT</th><th>Cost Center</th><th>Đối soát</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td><b>#VAT-0158</b></td><td>Nguyễn M. Tuấn</td><td>✈️ VietJet VJ134</td><td>1.850.000đ</td><td>10%</td><td>BD-HCM-001</td><td><span class="badge badge-green">✓ Khớp</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
+      <tr><td><b>#VAT-0157</b></td><td>Nguyễn M. Tuấn</td><td>🏨 Pullman SGN</td><td>1.800.000đ</td><td>10%</td><td>BD-HCM-001</td><td><span class="badge badge-green">✓ Khớp</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
+      <tr><td><b>#VAT-0156</b></td><td>Phạm K. Linh</td><td>✈️ VN1540</td><td>1.890.000đ</td><td>8%</td><td>BD-HCM-001</td><td><span class="badge badge-yellow">⚠ Xem xét</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
+      <tr><td><b>#VAT-0155</b></td><td>Lê M. Khoa</td><td>🚖 XanhSM</td><td>180.000đ</td><td>10%</td><td>TECH-001</td><td><span class="badge badge-green">✓ Khớp</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
+      <tr><td><b>#VAT-0154</b></td><td>Hoàng T. Mai</td><td>🏨 Mường Thanh</td><td>750.000đ</td><td>8%</td><td>SALES-HN-002</td><td><span class="badge badge-green">✓ Khớp</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
+    </tbody>
+  </table>`;
+}
+
+// ══════════════════════════════════════
+//  REPORT
+// ══════════════════════════════════════
+function renderReport(c){
+  c.innerHTML = `
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">📤 Xuất báo cáo thủ công</div>
+      <div class="form-group"><label class="form-label">Kỳ báo cáo</label><select class="form-control"><option>Tháng 5/2026</option><option>Tháng 4/2026</option><option>Q1 2026</option></select></div>
+      <div class="form-group"><label class="form-label">Phòng ban</label><select class="form-control"><option>Tất cả</option><option>BD HCM</option><option>Tech</option><option>Sales HN</option></select></div>
+      <div class="form-group"><label class="form-label">Định dạng</label>
+        <div style="display:flex;gap:10px">
+          <label style="display:flex;align-items:center;gap:6px"><input type="radio" name="fmt" checked/> 📊 Excel</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="radio" name="fmt"/> 📄 PDF</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="radio" name="fmt"/> 🗂 CSV</label>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="doExport()">📥 Xuất báo cáo</button>
+    </div>
+    <div class="card">
+      <div class="card-title">🕐 Báo cáo tự động</div>
+      <div class="form-group"><label class="form-label">Tần suất</label><select class="form-control"><option>Cuối tháng (ngày 28)</option><option>Hàng tuần (Thứ 6)</option><option>Hàng ngày 08:00</option></select></div>
+      <div class="form-group"><label class="form-label">Gửi đến</label><input class="form-control" value="bld@vnpay.vn, cfo@vnpay.vn"/></div>
+      <div class="form-group"><label class="form-label">Nội dung</label>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" checked/> Tổng chi phí T&E</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" checked/> Chi phí theo phòng ban</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" checked/> Danh sách hóa đơn</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox"/> Policy violation log</label>
+        </div>
+      </div>
+      <button class="btn btn-primary">💾 Lưu cấu hình</button>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════
+//  RECONCILE
+// ══════════════════════════════════════
+function renderReconcile(c){
+  c.innerHTML = `
+  <div class="grid-4" style="margin-bottom:16px">
+    <div class="kpi"><div class="kpi-icon green">✅</div><div><div class="kpi-label">Auto-matched</div><div class="kpi-val">152</div><div class="kpi-sub up">96%</div></div></div>
+    <div class="kpi"><div class="kpi-icon orange">⚠️</div><div><div class="kpi-label">Cần xem xét</div><div class="kpi-val">6</div><div class="kpi-sub">Chênh lệch nhỏ</div></div></div>
+    <div class="kpi"><div class="kpi-icon blue">💰</div><div><div class="kpi-label">Tổng giá trị</div><div class="kpi-val">284M</div></div></div>
+    <div class="kpi"><div class="kpi-icon red">⏱</div><div><div class="kpi-label">Tiết kiệm thời gian</div><div class="kpi-val">↓80%</div><div class="kpi-sub up">vs đối soát tay</div></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">🔍 Hóa đơn cần xem xét</div>
+    <table class="tbl">
+      <thead><tr><th>Số HĐ</th><th>Nhân viên</th><th>Dịch vụ</th><th>Giá HĐ</th><th>Giá giao dịch</th><th>Chênh lệch</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>#VAT-0156</td><td>Phạm K. Linh</td><td>✈️ VN1540</td><td>1.890.000đ</td><td>1.850.000đ</td><td style="color:var(--orange)">+40.000đ</td><td><button class="btn btn-ghost btn-sm">✓ Xác nhận</button></td></tr>
+        <tr><td>#VAT-0149</td><td>Lý Văn Sơn</td><td>🏨 Novotel HCM</td><td>2.800.000đ</td><td>2.750.000đ</td><td style="color:var(--orange)">+50.000đ</td><td><button class="btn btn-ghost btn-sm">✓ Xác nhận</button></td></tr>
+      </tbody>
+    </table>
+  </div>`;
+}
+
+// ══════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════
+function approvalCardHTML(id,name,initials,route,cost,badgeClass,badgeText,status,time){
+  return `<div class="appr-card">
+    <div class="appr-head">
+      <div class="appr-avatar" style="background:var(--red)">${initials}</div>
+      <div><div class="appr-name">${name}</div><div class="appr-sub">#${id} • ${route}</div></div>
+      <span class="badge ${badgeClass}">${badgeText}</span>
+    </div>
+    <div class="appr-meta"><span>💰 ${cost}</span><span>🕐 ${time}</span></div>
+    <div class="appr-actions">
+      <button class="btn btn-red btn-sm" onclick="quickReject('${id}')">✗ Từ chối</button>
+      <button class="btn btn-green btn-sm" onclick="quickApprove('${id}')">✓ Duyệt</button>
+    </div>
+  </div>`;
+}
+
+function barHTML(label,val,pct,color){
+  return `<div class="chart-bar-wrap">
+    <div class="chart-bar-val">${val}</div>
+    <div class="chart-bar" style="height:${pct}px;background:${color}"></div>
+    <div class="chart-bar-label">${label}</div>
+  </div>`;
+}
+
+function deptBar(name,val,pct,color){
+  return `<div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+      <span><b>${name}</b></span><span>${val} / ${Math.round(val.replace('M','')/pct*100)}M</span>
+    </div>
+    <div class="budget-bar-wrap"><div class="budget-bar" style="width:${pct}%;background:${color}"></div></div>
+  </div>`;
+}
+
+function serviceRow(name,val,pct,color){
+  return `<div style="display:flex;align-items:center;gap:10px">
+    <div style="width:140px;font-size:12px">${name}</div>
+    <div style="flex:1"><div class="budget-bar-wrap"><div class="budget-bar" style="width:${pct*10}%;background:${color}"></div></div></div>
+    <div style="width:60px;text-align:right;font-size:12px;font-weight:700">${val}</div>
+    <div style="width:30px;text-align:right;font-size:11px;color:var(--gray3)">${pct}%</div>
+  </div>`;
+}
+
+// ══════════════════════════════════════
+//  ACTIONS
+// ══════════════════════════════════════
+function toggleNotif(){
+  document.getElementById('notif-panel').classList.toggle('open');
+}
+document.addEventListener('click',e=>{
+  const p = document.getElementById('notif-panel');
+  if(p && !p.contains(e.target) && !e.target.closest('.notif-btn')) p.classList.remove('open');
+});
+
+function showModal(id){ document.getElementById(id).classList.add('open'); tripStep=1; updateTripStep(); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+let tripStep = 1;
+function tripNext(){
+  if(tripStep===1){
+    tripStep=2;
+    document.getElementById('trip-step-1').style.display='none';
+    document.getElementById('trip-step-2').style.display='block';
+    document.getElementById('step1').className='step done';
+    document.getElementById('step2').className='step active';
+    document.getElementById('btn-modal-next').textContent='Gửi yêu cầu →';
+  } else if(tripStep===2){
+    tripStep=3;
+    document.getElementById('trip-step-2').style.display='none';
+    document.getElementById('trip-step-3').style.display='block';
+    document.getElementById('step2').className='step done';
+    document.getElementById('step3').className='step active';
+    document.getElementById('btn-modal-next').textContent='Hoàn tất ✓';
+    document.getElementById('btn-modal-cancel').textContent='Đóng';
+  } else {
+    closeModal('modal-trip');
+    tripStep=1;
+  }
+}
+function updateTripStep(){
+  document.getElementById('trip-step-1').style.display='block';
+  document.getElementById('trip-step-2').style.display='none';
+  document.getElementById('trip-step-3').style.display='none';
+  document.getElementById('step1').className='step active';
+  document.getElementById('step2').className='step inactive';
+  document.getElementById('step3').className='step inactive';
+  document.getElementById('btn-modal-next').textContent='Tiếp theo →';
+  document.getElementById('btn-modal-cancel').textContent='Hủy';
+}
+
+function selectFlight(el){
+  document.querySelectorAll('.flight-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function quickApprove(id){
+  const card = document.getElementById('card-'+id);
+  if(card){
+    card.style.opacity='0.4';
+    card.innerHTML += `<div style="text-align:center;padding:10px;font-weight:700;color:var(--green)">✓ Đã phê duyệt</div>`;
+    card.style.pointerEvents='none';
+    showToast('✓ Đã phê duyệt Trip #'+id,'green');
+  }
+}
+function quickReject(id){
+  const card = document.getElementById('card-'+id);
+  if(card){
+    card.style.opacity='0.4';
+    card.innerHTML += `<div style="text-align:center;padding:10px;font-weight:700;color:var(--red)">✗ Đã từ chối</div>`;
+    card.style.pointerEvents='none';
+    showToast('✗ Đã từ chối Trip #'+id,'red');
+  }
+}
+function doApprove(){ closeModal('modal-approve'); showToast('✓ Đã phê duyệt thành công!','green'); }
+function doReject(){ closeModal('modal-approve'); showToast('✗ Đã từ chối yêu cầu','red'); }
+function doBook(){ showToast('🎉 Đặt vé thành công! E-invoice sẽ được gửi trong 5 phút.','green'); }
+function doExport(){ showToast('📥 Đang xuất báo cáo Excel...','blue'); }
+
+function showToast(msg, type){
+  const colors = {green:'var(--green)',red:'var(--red)',blue:'var(--blue)',orange:'var(--orange)'};
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:24px;right:24px;background:${colors[type]||'var(--blue)'};color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.2);transition:.3s`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 3000);
+}
+
+// INIT
+document.getElementById('topbar-date').textContent = '14/05/2026';
+</script>
+</body>
+</html>
